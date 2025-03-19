@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aweb-record-mysql
+  labels:
+    app: aweb-record-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aweb-record-mysql
+  template:
+    metadata:
+      name: aweb-record-mysql
+      labels:
+        app: aweb-record-mysql
+    spec:
+      containers:
+        - name: aweb-record-mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: "aweb"         # 可选，创建默认数据库
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mysql-storage
+      restartPolicy: Always
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+#            PVC persistent volume claim
+            claimName: aweb-mysql-pvc

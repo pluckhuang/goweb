@@ -1,0 +1,7 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: record
+provisioner: docker.io/hostpath
+reclaimPolicy: Retain  # 删除 PVC 后保留 PV
+volumeBindingMode: Immediate

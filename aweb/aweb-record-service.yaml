@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aweb-record-service
+spec:
+  selector:
+    app: aweb-record
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 8080
+  type: ClusterIP

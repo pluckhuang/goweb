@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aweb-record-redis
+  labels:
+    app: aweb-record-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aweb-record-redis
+  template:
+    metadata:
+      name: aweb-record-redis
+      labels:
+        app: aweb-record-redis
+    spec:
+      containers:
+        - name: aweb-record-redis
+          image: redis:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+      restartPolicy: Always
