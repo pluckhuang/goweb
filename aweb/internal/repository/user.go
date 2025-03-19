@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/pluckhuang/goweb/aweb/internal/domain"
 	"github.com/pluckhuang/goweb/aweb/internal/repository/dao"
@@ -57,6 +58,8 @@ func (repo *UserRepository) toDomain(u dao.User) domain.User {
 		Id:       u.Id,
 		Email:    u.Email,
 		Password: u.Password,
+		Nickname: u.Nickname,
+		Birthday: time.UnixMilli(u.Birthday),
 	}
 }
 

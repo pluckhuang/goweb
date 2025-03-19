@@ -7,6 +7,7 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pluckhuang/goweb/aweb/internal/domain"
 	"github.com/pluckhuang/goweb/aweb/internal/service"
 )
@@ -38,7 +39,9 @@ func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	// POST /users/signup
 	ug.POST("/signup", h.SignUp)
 	// POST /users/login
-	ug.POST("/login", h.Login)
+	// ug.POST("/login", h.Login)
+	ug.POST("/login", h.LoginJWT)
+
 	// POST /users/edit
 	ug.POST("/edit", h.Edit)
 	// GET /users/profile
@@ -91,6 +94,40 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "注册成功")
 	case service.ErrDuplicateEmail:
 		ctx.String(http.StatusOK, "邮箱冲突，请换一个")
+	default:
+		ctx.String(http.StatusOK, "系统错误")
+	}
+}
+
+func (h *UserHandler) LoginJWT(ctx *gin.Context) {
+	type Req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	u, err := h.svc.Login(ctx, req.Email, req.Password)
+	switch err {
+	case nil:
+		uc := UserClaims{
+			Uid:       u.Id,
+			UserAgent: ctx.GetHeader("User-Agent"),
+			RegisteredClaims: jwt.RegisteredClaims{
+				// 300 分钟过期
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 300)),
+			},
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS512, uc)
+		tokenStr, err := token.SignedString(JWTKey)
+		if err != nil {
+			ctx.String(http.StatusOK, "系统错误")
+		}
+		ctx.Header("x-jwt-token", tokenStr)
+		ctx.String(http.StatusOK, "登录成功")
+	case service.ErrInvalidUserOrPassword:
+		ctx.String(http.StatusOK, "用户名或者密码不对")
 	default:
 		ctx.String(http.StatusOK, "系统错误")
 	}
@@ -172,16 +209,40 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 }
 
 func (h *UserHandler) Profile(ctx *gin.Context) {
-	sess := sessions.Default(ctx)
-	userId, ok := sess.Get("userId").(int64)
+	val, ok := ctx.Get("user")
 	if !ok {
-		ctx.String(http.StatusOK, "请先登录")
+		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-	u, err := h.svc.FindById(ctx, userId)
+	uc, ok := val.(UserClaims)
+	if !ok {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	u, err := h.svc.FindById(ctx, uc.Uid)
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
-	ctx.JSON(http.StatusOK, u)
+	type User struct {
+		Nickname string
+		Email    string
+		AboutMe  string
+		Birthday string
+	}
+
+	user := User{
+		Nickname: u.Nickname,
+		Email:    u.Email,
+		Birthday: u.Birthday.Format(time.DateOnly),
+	}
+	ctx.JSON(http.StatusOK, user)
+}
+
+var JWTKey = []byte("11111111111111111111")
+
+type UserClaims struct {
+	jwt.RegisteredClaims
+	Uid       int64
+	UserAgent string
 }

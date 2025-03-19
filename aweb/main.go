@@ -1,13 +1,10 @@
 package main
 
 import (
-	"log"
 	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/pluckhuang/goweb/aweb/config"
 	"github.com/pluckhuang/goweb/aweb/internal/repository"
@@ -15,6 +12,8 @@ import (
 	"github.com/pluckhuang/goweb/aweb/internal/service"
 	"github.com/pluckhuang/goweb/aweb/internal/web"
 	"github.com/pluckhuang/goweb/aweb/internal/web/middleware"
+	"github.com/pluckhuang/goweb/aweb/pkg/ginx/middleware/ratelimit"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -71,11 +70,19 @@ func initWebServer() *gin.Engine {
 		println("这是我的 Middleware")
 	})
 
-	login := &middleware.LoginMiddlewareBuilder{}
-	store, err := redis.NewStore(10, "tcp", "localhost:6379", "", []byte("secret"))
-	if err != nil {
-		log.Fatalf("Failed to create Redis store: %v", err)
-	}
-	server.Use(sessions.Sessions("ssid", store), login.CheckLogin())
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+
+	server.Use(ratelimit.NewBuilder(redisClient,
+		time.Second, 1).Build())
+
+	useJWT(server)
+	//useSession(server)
 	return server
+}
+
+func useJWT(server *gin.Engine) {
+	login := middleware.LoginJWTMiddlewareBuilder{}
+	server.Use(login.CheckLogin())
 }
