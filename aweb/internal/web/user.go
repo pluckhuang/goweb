@@ -13,19 +13,20 @@ import (
 )
 
 const (
-	emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
-	passwordRegexPattern = `^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$`
+	emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
+	// 和上面比起来，用 ` 看起来就比较清爽
+	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
 	bizLogin             = "login"
 )
 
 type UserHandler struct {
 	emailRexExp    *regexp.Regexp
 	passwordRexExp *regexp.Regexp
-	svc            *service.UserService
-	codeSvc        *service.CodeService
+	svc            service.UserService
+	codeSvc        service.CodeService
 }
 
-func NewUserHandler(svc *service.UserService, codeSvc *service.CodeService) *UserHandler {
+func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
 	return &UserHandler{
 		emailRexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
@@ -35,6 +36,7 @@ func NewUserHandler(svc *service.UserService, codeSvc *service.CodeService) *Use
 }
 
 func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
+	// REST 风格
 	//server.POST("/user", h.SignUp)
 	//server.PUT("/user", h.SignUp)
 	//server.GET("/users/:username", h.Profile)
@@ -42,9 +44,8 @@ func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	// POST /users/signup
 	ug.POST("/signup", h.SignUp)
 	// POST /users/login
-	// ug.POST("/login", h.Login)
+	//ug.POST("/login", h.Login)
 	ug.POST("/login", h.LoginJWT)
-
 	// POST /users/edit
 	ug.POST("/edit", h.Edit)
 	// GET /users/profile
@@ -193,20 +194,7 @@ func (h *UserHandler) LoginJWT(ctx *gin.Context) {
 	u, err := h.svc.Login(ctx, req.Email, req.Password)
 	switch err {
 	case nil:
-		uc := UserClaims{
-			Uid:       u.Id,
-			UserAgent: ctx.GetHeader("User-Agent"),
-			RegisteredClaims: jwt.RegisteredClaims{
-				// 300 分钟过期
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 300)),
-			},
-		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS512, uc)
-		tokenStr, err := token.SignedString(JWTKey)
-		if err != nil {
-			ctx.String(http.StatusOK, "系统错误")
-		}
-		ctx.Header("x-jwt-token", tokenStr)
+		h.setJWTToken(ctx, u.Id)
 		ctx.String(http.StatusOK, "登录成功")
 	case service.ErrInvalidUserOrPassword:
 		ctx.String(http.StatusOK, "用户名或者密码不对")
@@ -247,7 +235,8 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 		sess := sessions.Default(ctx)
 		sess.Set("userId", u.Id)
 		sess.Options(sessions.Options{
-			MaxAge: 900,
+			// 十分钟
+			MaxAge: 30,
 		})
 		err = sess.Save()
 		if err != nil {
@@ -263,82 +252,78 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 }
 
 func (h *UserHandler) Edit(ctx *gin.Context) {
-	type UserEditReq struct {
-		Nickname    string `json:"nickname"`
-		Birthday    string `json:"birthday"`
-		Description string `json:"description"`
+	// 嵌入一段刷新过期时间的代码
+	type Req struct {
+		// 改邮箱，密码，或者能不能改手机号
+
+		Nickname string `json:"nickname"`
+		// YYYY-MM-DD
+		Birthday string `json:"birthday"`
+		AboutMe  string `json:"aboutMe"`
 	}
-	var req UserEditReq
+	var req Req
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
-	var birthday *time.Time
-	if req.Birthday != "" {
-		b, err := time.Parse(time.DateOnly, req.Birthday)
-		if err != nil {
-			ctx.String(http.StatusOK, "生日格式不对")
-			return
-		}
-		birthday = &b
-	}
-	sess := sessions.Default(ctx)
-	userId, ok := sess.Get("userId").(int64)
+	//sess := sessions.Default(ctx)
+	//sess.Get("uid")
+	uc, ok := ctx.MustGet("user").(UserClaims)
 	if !ok {
-		ctx.String(http.StatusOK, "请先登录")
-		return
-	}
-
-	updateFields := map[string]interface{}{}
-	if req.Nickname != "" {
-		updateFields["nickname"] = req.Nickname
-	}
-	if birthday != nil {
-		updateFields["birthday"] = *birthday
-	}
-	if req.Description != "" {
-		updateFields["description"] = req.Description
-	}
-
-	err := h.svc.Edit(ctx, userId, updateFields)
-	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
-		return
-	}
-	ctx.String(http.StatusOK, "成功")
-}
-
-func (h *UserHandler) Profile(ctx *gin.Context) {
-	val, ok := ctx.Get("user")
-	if !ok {
+		//ctx.String(http.StatusOK, "系统错误")
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-	uc, ok := val.(UserClaims)
+	// 用户输入不对
+	birthday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		//ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "生日格式不对")
+		return
+	}
+	err = h.svc.UpdateNonSensitiveInfo(ctx, domain.User{
+		Id:       uc.Uid,
+		Nickname: req.Nickname,
+		Birthday: birthday,
+		AboutMe:  req.AboutMe,
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+	ctx.String(http.StatusOK, "更新成功")
+}
+
+func (h *UserHandler) Profile(ctx *gin.Context) {
+	//us := ctx.MustGet("user").(UserClaims)
+	//ctx.String(http.StatusOK, "这是 profile")
+	// 嵌入一段刷新过期时间的代码
+
+	uc, ok := ctx.MustGet("user").(UserClaims)
 	if !ok {
+		//ctx.String(http.StatusOK, "系统错误")
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 	u, err := h.svc.FindById(ctx, uc.Uid)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "系统异常")
 		return
 	}
 	type User struct {
-		Nickname string
-		Email    string
-		AboutMe  string
-		Birthday string
+		Nickname string `json:"nickname"`
+		Email    string `json:"email"`
+		AboutMe  string `json:"aboutMe"`
+		Birthday string `json:"birthday"`
 	}
-
-	user := User{
+	ctx.JSON(http.StatusOK, User{
 		Nickname: u.Nickname,
 		Email:    u.Email,
+		AboutMe:  u.AboutMe,
 		Birthday: u.Birthday.Format(time.DateOnly),
-	}
-	ctx.JSON(http.StatusOK, user)
+	})
 }
 
-var JWTKey = []byte("11111111111111111111")
+var JWTKey = []byte("1111111111111111")
 
 type UserClaims struct {
 	jwt.RegisteredClaims
