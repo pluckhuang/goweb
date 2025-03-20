@@ -30,7 +30,7 @@ func initUserHdl(db *gorm.DB, server *gin.Engine) {
 	ud := dao.NewUserDAO(db)
 	ur := repository.NewUserRepository(ud)
 	us := service.NewUserService(ur)
-	hdl := web.NewUserHandler(us)
+	hdl := web.NewUserHandler(us, cs)
 	hdl.RegisterRoutes(server)
 }
 
