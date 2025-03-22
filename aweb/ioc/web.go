@@ -9,6 +9,7 @@ import (
 	"github.com/pluckhuang/goweb/aweb/internal/web"
 	"github.com/pluckhuang/goweb/aweb/internal/web/middleware"
 	"github.com/pluckhuang/goweb/aweb/pkg/ginx/middleware/ratelimit"
+	"github.com/pluckhuang/goweb/aweb/pkg/limiter"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -53,7 +54,7 @@ func InitGinMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
 		func(ctx *gin.Context) {
 			println("这是我的 Middleware")
 		},
-		ratelimit.NewBuilder(redisClient, time.Second, 1000).Build(),
+		ratelimit.NewBuilder(limiter.NewRedisSlidingWindowLimiter(redisClient, time.Second, 1000)).Build(),
 		(&middleware.LoginJWTMiddlewareBuilder{}).CheckLogin(),
 	}
 }

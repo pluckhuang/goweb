@@ -1,14 +1,30 @@
 package ioc
 
 import (
-	"github.com/pluckhuang/goweb/aweb/config"
 	"github.com/pluckhuang/goweb/aweb/internal/repository/dao"
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 func InitDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
+	type Config struct {
+		DSN string `yaml:"dsn"`
+	}
+	var cfg Config = Config{
+		DSN: "root:root@tcp(localhost:3316)/webook",
+	}
+	err := viper.UnmarshalKey("db", &cfg)
+	if err != nil {
+		panic(err)
+	}
+	db, err := gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{
+		//Logger: glogger.New(goormLoggerFunc(l.Debug), glogger.Config{
+		//	// 慢查询
+		//	SlowThreshold: 0,
+		//	LogLevel:      glogger.Info,
+		//}),
+	})
 	if err != nil {
 		panic(err)
 	}

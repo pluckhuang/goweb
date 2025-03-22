@@ -1,0 +1,11 @@
+test:
+  key: value1234
+
+redis:
+  addr: "localhost:6379"
+
+db:
+  dsn: "root:password@tcp(localhost:3306)/aweb"
+kafka:
+  addr:
+    - "localhost:9094"
