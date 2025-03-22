@@ -13,6 +13,7 @@ import (
 	"github.com/pluckhuang/goweb/aweb/internal/repository/dao"
 	"github.com/pluckhuang/goweb/aweb/internal/service"
 	"github.com/pluckhuang/goweb/aweb/internal/web"
+	"github.com/pluckhuang/goweb/aweb/internal/web/jwt"
 	"github.com/pluckhuang/goweb/aweb/ioc"
 )
 
@@ -20,7 +21,9 @@ import (
 
 func InitWebServer() *gin.Engine {
 	cmdable := ioc.InitRedis()
-	v := ioc.InitGinMiddlewares(cmdable)
+	handler := jwt.NewRedisJWTHandler(cmdable)
+	loggerV1 := ioc.InitLogger()
+	v := ioc.InitGinMiddlewares(cmdable, handler, loggerV1)
 	db := ioc.InitDB()
 	userDAO := dao.NewUserDAO(db)
 	userCache := cache.NewUserCache(cmdable)

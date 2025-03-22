@@ -10,6 +10,7 @@ import (
 	"github.com/pluckhuang/goweb/aweb/internal/repository/dao"
 	"github.com/pluckhuang/goweb/aweb/internal/service"
 	"github.com/pluckhuang/goweb/aweb/internal/web"
+	ijwt "github.com/pluckhuang/goweb/aweb/internal/web/jwt"
 	"github.com/pluckhuang/goweb/aweb/ioc"
 )
 
@@ -17,6 +18,7 @@ func InitWebServer() *gin.Engine {
 	wire.Build(
 		// 第三方依赖
 		ioc.InitRedis, ioc.InitDB,
+		ioc.InitLogger,
 		// DAO 部分
 		dao.NewUserDAO,
 
@@ -34,6 +36,7 @@ func InitWebServer() *gin.Engine {
 
 		// handler 部分
 		web.NewUserHandler,
+		ijwt.NewRedisJWTHandler,
 
 		ioc.InitGinMiddlewares,
 		ioc.InitWebServer,

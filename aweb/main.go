@@ -9,17 +9,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func main() {
 	initViper()
+	initLogger()
 	server := InitWebServer()
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello，启动成功了！")
 	})
 	server.Run(":8080")
 }
-
+func initLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	zap.ReplaceGlobals(logger)
+}
 func initViper() {
 	viper.SetConfigName("dev")
 	viper.SetConfigType("yaml")
