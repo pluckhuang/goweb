@@ -3,8 +3,8 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"github.com/pluckhuang/goweb/aweb/internal/events/article"
 	"github.com/pluckhuang/goweb/aweb/internal/repository"
 	"github.com/pluckhuang/goweb/aweb/internal/repository/cache"
 	"github.com/pluckhuang/goweb/aweb/internal/repository/dao"
@@ -14,32 +14,53 @@ import (
 	"github.com/pluckhuang/goweb/aweb/ioc"
 )
 
-func InitWebServer() *gin.Engine {
+var interactiveSvcSet = wire.NewSet(dao.NewGORMInteractiveDAO,
+	cache.NewInteractiveRedisCache,
+	repository.NewCachedInteractiveRepository,
+	service.NewInteractiveService,
+)
+
+func InitWebServer() *App {
 	wire.Build(
 		// 第三方依赖
 		ioc.InitRedis, ioc.InitDB,
 		ioc.InitLogger,
+		ioc.InitSaramaClient,
+		ioc.InitSyncProducer,
 		// DAO 部分
 		dao.NewUserDAO,
+		dao.NewArticleGORMDAO,
+
+		interactiveSvcSet,
+
+		article.NewSaramaSyncProducer,
+		article.NewInteractiveReadEventConsumer,
+		ioc.InitConsumers,
 
 		// cache 部分
 		cache.NewCodeCache, cache.NewUserCache,
+		cache.NewArticleRedisCache,
 
 		// repository 部分
 		repository.NewCachedUserRepository,
 		repository.NewCodeRepository,
+		repository.NewCachedArticleRepository,
 
 		// Service 部分
 		ioc.InitSMSService,
 		service.NewUserService,
 		service.NewCodeService,
+		service.NewArticleService,
 
 		// handler 部分
 		web.NewUserHandler,
 		ijwt.NewRedisJWTHandler,
+		web.NewArticleHandler,
 
 		ioc.InitGinMiddlewares,
 		ioc.InitWebServer,
+
+		wire.Struct(new(App), "*"),
 	)
-	return gin.Default()
+	return new(App)
 }

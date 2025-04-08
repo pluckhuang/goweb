@@ -6,6 +6,7 @@ redis:
 
 db:
   dsn: "root:password@tcp(localhost:3306)/aweb"
+
 kafka:
   addr:
     - "localhost:9094"

@@ -11,18 +11,24 @@ import (
 	"github.com/pluckhuang/goweb/aweb/internal/service"
 	"github.com/pluckhuang/goweb/aweb/internal/web/jwt"
 	"github.com/pluckhuang/goweb/aweb/pkg/logger"
+	"golang.org/x/sync/errgroup"
 )
 
 type ArticleHandler struct {
-	svc service.ArticleService
-	l   logger.LoggerV1
+	svc     service.ArticleService
+	intrSvc service.InteractiveService
+	l       logger.LoggerV1
+	biz     string
 }
 
 func NewArticleHandler(l logger.LoggerV1,
-	svc service.ArticleService) *ArticleHandler {
+	svc service.ArticleService,
+	intrSvc service.InteractiveService) *ArticleHandler {
 	return &ArticleHandler{
-		l:   l,
-		svc: svc,
+		l:       l,
+		svc:     svc,
+		intrSvc: intrSvc,
+		biz:     "article",
 	}
 }
 
@@ -42,21 +48,22 @@ func (h *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 
 	pub := g.Group("/pub")
 	pub.GET("/:id", h.PubDetail)
+	// 传入一个参数，true 就是点赞, false 就是不点赞
+	pub.POST("/like", h.Like)
+	pub.POST("/collect", h.Collect)
 }
 
 // Edit 接收 Article 输入，返回一个 ID，文章的 ID
 func (h *ArticleHandler) Edit(ctx *gin.Context) {
 	type Req struct {
-		ProductId int64
-		Id        int64  `json:"id,omitempty"`
-		Title     string `json:"title"`
-		Content   string `json:"content"`
+		Id      int64
+		Title   string `json:"title"`
+		Content string `json:"content"`
 	}
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
-	println("这是Edit的 req", req.ProductId)
 	uc := ctx.MustGet("user").(jwt.UserClaims)
 	id, err := h.svc.Save(ctx, domain.Article{
 		Id:      req.Id,
@@ -252,13 +259,34 @@ func (h *ArticleHandler) PubDetail(ctx *gin.Context) {
 		return
 	}
 
-	art, err := h.svc.GetPubById(ctx, id)
+	var (
+		eg   errgroup.Group
+		art  domain.Article
+		intr domain.Interactive
+	)
+
+	uc := ctx.MustGet("user").(jwt.UserClaims)
+	eg.Go(func() error {
+		var er error
+		art, er = h.svc.GetPubById(ctx, id, uc.Uid)
+		return er
+	})
+	eg.Go(func() error {
+		var er error
+		intr, er = h.intrSvc.Get(ctx, h.biz, id, uc.Uid)
+		return er
+	})
+
+	// 等待结果
+	err = eg.Wait()
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Msg:  "系统错误",
 			Code: 5,
 		})
 		h.l.Error("查询文章失败，系统错误",
+			logger.Int64("aid", id),
+			logger.Int64("uid", uc.Uid),
 			logger.Error(err))
 		return
 	}
@@ -271,10 +299,76 @@ func (h *ArticleHandler) PubDetail(ctx *gin.Context) {
 			Content:    art.Content,
 			AuthorId:   art.Author.Id,
 			AuthorName: art.Author.Name,
+			ReadCnt:    intr.ReadCnt,
+			CollectCnt: intr.CollectCnt,
+			LikeCnt:    intr.LikeCnt,
+			Liked:      intr.Liked,
+			Collected:  intr.Collected,
 
 			Status: art.Status.ToUint8(),
 			Ctime:  art.Ctime.Format(time.DateTime),
 			Utime:  art.Utime.Format(time.DateTime),
 		},
+	})
+}
+
+func (h *ArticleHandler) Like(c *gin.Context) {
+	type Req struct {
+		Id int64 `json:"id"`
+		// true 是点赞，false 是不点赞
+		Like bool `json:"like"`
+	}
+	var req Req
+	if err := c.Bind(&req); err != nil {
+		return
+	}
+	uc := c.MustGet("user").(jwt.UserClaims)
+	var err error
+	if req.Like {
+		// 点赞
+		err = h.intrSvc.Like(c, h.biz, req.Id, uc.Uid)
+	} else {
+		// 取消点赞
+		err = h.intrSvc.CancelLike(c, h.biz, req.Id, uc.Uid)
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 5, Msg: "系统错误",
+		})
+		h.l.Error("点赞/取消点赞失败",
+			logger.Error(err),
+			logger.Int64("uid", uc.Uid),
+			logger.Int64("aid", req.Id))
+		return
+	}
+	c.JSON(http.StatusOK, Result{
+		Msg: "OK",
+	})
+}
+
+func (h *ArticleHandler) Collect(ctx *gin.Context) {
+	type Req struct {
+		Id  int64 `json:"id"`
+		Cid int64 `json:"cid"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	uc := ctx.MustGet("user").(jwt.UserClaims)
+
+	err := h.intrSvc.Collect(ctx, h.biz, req.Id, req.Cid, uc.Uid)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5, Msg: "系统错误",
+		})
+		h.l.Error("收藏失败",
+			logger.Error(err),
+			logger.Int64("uid", uc.Uid),
+			logger.Int64("aid", req.Id))
+		return
+	}
+	ctx.JSON(http.StatusOK, Result{
+		Msg: "OK",
 	})
 }

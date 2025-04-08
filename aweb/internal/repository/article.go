@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
+//go:generate mockgen -source=./article.go -package=repomocks -destination=./mocks/article.mock.go ArticleRepository
 type ArticleRepository interface {
 	Create(ctx context.Context, art domain.Article) (int64, error)
 	Update(ctx context.Context, art domain.Article) error
@@ -24,7 +25,7 @@ type ArticleRepository interface {
 type CachedArticleRepository struct {
 	dao   dao.ArticleDAO
 	cache cache.ArticleCache
-	// 因为如果你直接访问 UserDAO，你就绕开了 repository，
+
 	// repository 一般都有一些缓存机制
 	userRepo UserRepository
 
