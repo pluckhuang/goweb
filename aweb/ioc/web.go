@@ -11,9 +11,12 @@ import (
 	ijwt "github.com/pluckhuang/goweb/aweb/internal/web/jwt"
 
 	"github.com/pluckhuang/goweb/aweb/internal/web/middleware"
+	"github.com/pluckhuang/goweb/aweb/pkg/ginx"
+	"github.com/pluckhuang/goweb/aweb/pkg/ginx/middleware/prometheus"
 	"github.com/pluckhuang/goweb/aweb/pkg/ginx/middleware/ratelimit"
 	"github.com/pluckhuang/goweb/aweb/pkg/limiter"
 	"github.com/pluckhuang/goweb/aweb/pkg/logger"
+	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -45,6 +48,18 @@ func InitWebServer(mdls []gin.HandlerFunc,
 }
 
 func InitGinMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler, l logger.LoggerV1) []gin.HandlerFunc {
+	pb := &prometheus.Builder{
+		Namespace: "pluckh.com",
+		Subsystem: "aweb",
+		Name:      "gin_http",
+		Help:      "统计 GIN 的HTTP接口数据",
+	}
+	ginx.InitCounter(prometheus2.CounterOpts{
+		Namespace: "pluckh.com",
+		Subsystem: "aweb",
+		Name:      "biz_code",
+		Help:      "统计业务错误码",
+	})
 	return []gin.HandlerFunc{
 		cors.New(cors.Config{
 			//AllowAllOrigins: true,
@@ -68,6 +83,8 @@ func InitGinMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler, l logger.Lo
 		func(ctx *gin.Context) {
 			println("这是我的 Middleware")
 		},
+		pb.BuildResponseTime(),
+		pb.BuildActiveRequest(),
 		ratelimit.NewBuilder(limiter.NewRedisSlidingWindowLimiter(redisClient, time.Second, 1000)).Build(),
 		middleware.NewLogMiddlewareBuilder(func(ctx context.Context, al middleware.AccessLog) {
 			l.Debug("", logger.Field{Key: "req", Val: al})

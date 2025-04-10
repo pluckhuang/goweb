@@ -7,7 +7,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/pluckhuang/goweb/aweb/internal/repository"
 	"github.com/pluckhuang/goweb/aweb/pkg/logger"
-	"github.com/pluckhuang/goweb/aweb/pkg/samarax"
+	"github.com/pluckhuang/goweb/aweb/pkg/saramax"
 )
 
 type InteractiveReadEventConsumer struct {
@@ -21,22 +21,6 @@ func NewInteractiveReadEventConsumer(repo repository.InteractiveRepository,
 	return &InteractiveReadEventConsumer{repo: repo, client: client, l: l}
 }
 
-func (i *InteractiveReadEventConsumer) Start() error {
-	cg, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
-	if err != nil {
-		return err
-	}
-	go func() {
-		er := cg.Consume(context.Background(),
-			[]string{TopicReadEvent},
-			samarax.NewBatchHandler[ReadEvent](i.l, i.BatchConsume))
-		if er != nil {
-			i.l.Error("退出消费", logger.Error(er))
-		}
-	}()
-	return err
-}
-
 func (i *InteractiveReadEventConsumer) StartV1() error {
 	cg, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
 	if err != nil {
@@ -45,13 +29,46 @@ func (i *InteractiveReadEventConsumer) StartV1() error {
 	go func() {
 		er := cg.Consume(context.Background(),
 			[]string{TopicReadEvent},
-			samarax.NewHandler[ReadEvent](i.l, i.Consume))
+			saramax.NewBatchHandler[ReadEvent](i.l, i.BatchConsume))
 		if er != nil {
 			i.l.Error("退出消费", logger.Error(er))
 		}
 	}()
 	return err
 }
+
+func (i *InteractiveReadEventConsumer) StartV2() error {
+	cg, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
+	if err != nil {
+		return err
+	}
+	go func() {
+		er := cg.Consume(context.Background(),
+			[]string{TopicReadEvent},
+			saramax.NewHandler[ReadEvent](i.l, i.Consume))
+		if er != nil {
+			i.l.Error("退出消费", logger.Error(er))
+		}
+	}()
+	return err
+}
+
+func (i *InteractiveReadEventConsumer) Start() error {
+	cg, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
+	if err != nil {
+		return err
+	}
+	go func() {
+		er := cg.Consume(context.Background(),
+			[]string{TopicReadEvent},
+			saramax.NewHandlerV1[ReadEvent]("StartV2", i.l, i.Consume))
+		if er != nil {
+			i.l.Error("退出消费", logger.Error(er))
+		}
+	}()
+	return err
+}
+
 func (i *InteractiveReadEventConsumer) BatchConsume(msgs []*sarama.ConsumerMessage,
 	events []ReadEvent) error {
 	bizs := make([]string, 0, len(events))

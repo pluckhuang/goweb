@@ -7,6 +7,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -16,6 +17,7 @@ func main() {
 	initViper()
 	initLogger()
 	app := InitWebServer()
+	initPrometheus()
 	for _, c := range app.consumers {
 		err := c.Start()
 		if err != nil {
@@ -28,6 +30,14 @@ func main() {
 	})
 	server.Run(":8080")
 }
+func initPrometheus() {
+	go func() {
+		// 专门给 prometheus 用的端口
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":8081", nil)
+	}()
+}
+
 func initLogger() {
 	logger, err := zap.NewDevelopment()
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 	"github.com/pluckhuang/goweb/aweb/internal/domain"
 	"github.com/pluckhuang/goweb/aweb/internal/repository"
 	"github.com/pluckhuang/goweb/aweb/pkg/logger"
-	"github.com/pluckhuang/goweb/aweb/pkg/samarax"
+	"github.com/pluckhuang/goweb/aweb/pkg/saramax"
 )
 
 type HistoryRecordConsumer struct {
@@ -25,7 +25,7 @@ func (i *HistoryRecordConsumer) Start() error {
 	go func() {
 		er := cg.Consume(context.Background(),
 			[]string{TopicReadEvent},
-			samarax.NewHandler[ReadEvent](i.l, i.Consume))
+			saramax.NewHandler[ReadEvent](i.l, i.Consume))
 		if er != nil {
 			i.l.Error("退出消费", logger.Error(er))
 		}

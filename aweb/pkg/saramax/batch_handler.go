@@ -1,9 +1,8 @@
-package samarax
+package saramax
 
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -31,7 +30,6 @@ func (b *BatchHandler[T]) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 	msgs := claim.Messages()
 	const batchSize = 10
 	for {
-		log.Println("一个批次开始")
 		batch := make([]*sarama.ConsumerMessage, 0, batchSize)
 		ts := make([]T, 0, batchSize)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
