@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
-	// 和上面比起来，用 ` 看起来就比较清爽
-	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
+	emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
+	passwordRegexPattern = `^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$`
 	bizLogin             = "login"
 )
 
@@ -163,7 +162,7 @@ func (h *UserHandler) SignUp(ctx *gin.Context, req SignUpReq) (ginx.Result, erro
 		}, nil
 	}
 
-	err = h.svc.Signup(ctx.Request.Context(), domain.User{
+	err = h.svc.Signup(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 	})

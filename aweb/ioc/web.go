@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pluckhuang/goweb/aweb/internal/web"
 	ijwt "github.com/pluckhuang/goweb/aweb/internal/web/jwt"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/pluckhuang/goweb/aweb/internal/web/middleware"
 	"github.com/pluckhuang/goweb/aweb/pkg/ginx"
@@ -85,6 +86,7 @@ func InitGinMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler, l logger.Lo
 		},
 		pb.BuildResponseTime(),
 		pb.BuildActiveRequest(),
+		otelgin.Middleware("aweb"),
 		ratelimit.NewBuilder(limiter.NewRedisSlidingWindowLimiter(redisClient, time.Second, 1000)).Build(),
 		middleware.NewLogMiddlewareBuilder(func(ctx context.Context, al middleware.AccessLog) {
 			l.Debug("", logger.Field{Key: "req", Val: al})
