@@ -1,15 +1,22 @@
 package ioc
 
 import (
+	"log"
+	"os"
+	"time"
+
 	"github.com/pluckhuang/goweb/aweb/internal/repository/dao"
 	"github.com/pluckhuang/goweb/aweb/pkg/gormx"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
 	"gorm.io/plugin/prometheus"
 )
 
+// 引入 glogger
 func InitDB() *gorm.DB {
 	type Config struct {
 		DSN string `yaml:"dsn"`
@@ -22,17 +29,21 @@ func InitDB() *gorm.DB {
 		panic(err)
 	}
 	db, err := gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{
-		//Logger: glogger.New(goormLoggerFunc(l.Debug), glogger.Config{
-		//	// 慢查询
-		//	SlowThreshold: 0,
-		//	LogLevel:      glogger.Info,
-		//}),
+		Logger: logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags), // 输出到标准输出
+			logger.Config{
+				SlowThreshold: 300 * time.Millisecond, // 设置慢查询阈值为 300ms
+				LogLevel:      logger.Warn,            // 设置日志级别为 Warn
+				Colorful:      true,                   // 启用彩色日志输出
+			},
+		),
 	})
 	if err != nil {
 		panic(err)
 	}
+
 	err = db.Use(prometheus.New(prometheus.Config{
-		DBName:          "webook",
+		DBName:          "aweb",
 		RefreshInterval: 15,
 		MetricsCollector: []prometheus.MetricsCollector{
 			&prometheus.MySQL{
@@ -64,6 +75,15 @@ func InitDB() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
+
+	err = db.Use(tracing.NewPlugin(
+		tracing.WithoutMetrics(),
+		tracing.WithDBName("aweb"),
+	))
+	if err != nil {
+		panic(err)
+	}
+
 	err = dao.InitTables(db)
 	if err != nil {
 		panic(err)

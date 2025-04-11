@@ -2,13 +2,14 @@ package ioc
 
 import (
 	"context"
+	"time"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
-	"time"
 )
 
 // InitOTEL 返回一个关闭函数，并且让调用者关闭的时候来决定这个 ctx
@@ -48,12 +49,18 @@ func newTraceProvider(res *resource.Resource) (*trace.TracerProvider, error) {
 		return nil, err
 	}
 
+	batchProcessor := trace.NewBatchSpanProcessor(
+		exporter,
+		trace.WithBatchTimeout(5*time.Second), // 批量导出的超时时间
+		trace.WithMaxExportBatchSize(100),     // 每次导出的最大 Span 数量
+	)
+	filteringProcessor := NewFilteringSpanProcessor(batchProcessor)
+	// 创建 TracerProvider，并注册 FilteringSpanProcessor
 	traceProvider := trace.NewTracerProvider(
-		trace.WithBatcher(exporter,
-			// Default is 5s. Set to 1s for demonstrative purposes.
-			trace.WithBatchTimeout(time.Second)),
+		trace.WithSpanProcessor(filteringProcessor), // 确保它是第一个处理器
 		trace.WithResource(res),
 	)
+
 	return traceProvider, nil
 }
 
