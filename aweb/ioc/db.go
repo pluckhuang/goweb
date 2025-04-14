@@ -1,42 +1,36 @@
 package ioc
 
 import (
-	"log"
-	"os"
-	"time"
-
 	"github.com/pluckhuang/goweb/aweb/internal/repository/dao"
 	"github.com/pluckhuang/goweb/aweb/pkg/gormx"
+	"github.com/pluckhuang/goweb/aweb/pkg/logger"
 	prometheus2 "github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	glogger "gorm.io/gorm/logger"
 	"gorm.io/plugin/opentelemetry/tracing"
 	"gorm.io/plugin/prometheus"
 )
 
 // 引入 glogger
-func InitDB() *gorm.DB {
+func InitDB(l logger.LoggerV1) *gorm.DB {
 	type Config struct {
 		DSN string `yaml:"dsn"`
 	}
 	var cfg Config = Config{
-		DSN: "root:root@tcp(localhost:3316)/webook",
+		DSN: "root:root@tcp(localhost:3316)/aweb",
 	}
 	err := viper.UnmarshalKey("db", &cfg)
 	if err != nil {
 		panic(err)
 	}
 	db, err := gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{
-		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags), // 输出到标准输出
-			logger.Config{
-				SlowThreshold: 300 * time.Millisecond, // 设置慢查询阈值为 300ms
-				LogLevel:      logger.Warn,            // 设置日志级别为 Warn
-				Colorful:      true,                   // 启用彩色日志输出
-			},
-		),
+		Logger: glogger.New(goormLoggerFunc(l.Debug), glogger.Config{
+			// 慢查询
+			SlowThreshold: 200,
+			LogLevel:      glogger.Info,
+		}),
 	})
 	if err != nil {
 		panic(err)
@@ -89,4 +83,10 @@ func InitDB() *gorm.DB {
 		panic(err)
 	}
 	return db
+}
+
+type goormLoggerFunc func(msg string, fields ...logger.Field)
+
+func (g goormLoggerFunc) Printf(s string, i ...interface{}) {
+	g(s, logger.Field{Key: "args", Val: i})
 }
