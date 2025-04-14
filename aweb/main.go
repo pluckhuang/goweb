@@ -122,7 +122,7 @@ redis:
   addr: "localhost:6379"
 
 db:
-  dsn: "root:root@tcp(localhost:13316)/webook"
+  dsn: "root:root@tcp(localhost:13316)/aweb"
 `
 	viper.SetConfigType("yaml")
 	err := viper.ReadConfig(bytes.NewReader([]byte(cfg)))
@@ -133,7 +133,7 @@ db:
 
 func initViperRemote() {
 	err := viper.AddRemoteProvider("etcd3",
-		"http://127.0.0.1:12379", "/webook")
+		"http://127.0.0.1:12379", "/aweb")
 	if err != nil {
 		panic(err)
 	}
