@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option go_package = "user/v1;userv1";
+
+
+message User {
+  int64 id = 1;
+
+  string name = 2;
+
+  string avatar = 4;
+
+  map<string, string> attributes = 5;
+
+  repeated string nicknames = 6;
+
+  Address address = 7;
+
+  Gender gender = 8;
+}
+
+message Address {
+  string province = 1;
+  string city = 3;
+}
+
+enum Gender {
+  GENDER_UNKNOWN = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+}
+
+service UserService {
+  rpc GetByID(GetByIDRequest) returns(GetByIDResponse);
+}
+
+message GetByIDRequest {
+  int64 id = 1;
+}
+
+message GetByIDResponse {
+  User user = 1;
+}

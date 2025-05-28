@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option go_package = "oauth2/v1;oauth2v1";
+
+service OAuth2Service {
+  // 获取授权 URL
+  rpc GetAuthURL(GetAuthURLRequest) returns (GetAuthURLResponse) {}
+  // 处理回调并获取 Token
+  rpc HandleCallback(HandleCallbackRequest) returns (HandleCallbackResponse) {}
+}
+
+message GetAuthURLRequest {
+  string platform = 1; // "twitter", "discord", "telegram"
+}
+
+message GetAuthURLResponse {
+  string auth_url = 1;
+  string state = 2;
+}
+
+message HandleCallbackRequest {
+  string platform = 1;
+  string code = 2;
+  string state = 3;
+}
+
+message HandleCallbackResponse {
+  string access_token = 1;
+  string error = 2;
+}

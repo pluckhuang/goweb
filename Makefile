@@ -19,3 +19,9 @@ mock:
 	@mockgen -source=./aweb/internal/repository/dao/article_reader.go -package=daomocks -destination=./aweb/internal/repository/dao/mocks/article_reader.mock.go
 	@mockgen -source=./aweb/internal/repository/dao/article_author.go -package=daomocks -destination=./aweb/internal/repository/dao/mocks/article_author.mock.go
 	@go mod tidy
+
+
+
+.PHONY: grpc
+grpc:
+	@buf generate aweb/api/proto
