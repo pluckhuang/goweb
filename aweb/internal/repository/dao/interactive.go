@@ -111,7 +111,7 @@ func (dao *GORMInteractiveDAO) InsertLikeInfo(ctx context.Context,
 				"like_cnt": gorm.Expr("`like_cnt` + 1"),
 				"utime":    now,
 			}),
-		}).Create(&Interatcive{
+		}).Create(&Interactive{
 			Biz:     biz,
 			BizId:   id,
 			LikeCnt: 1,
