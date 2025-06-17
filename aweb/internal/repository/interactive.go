@@ -54,18 +54,15 @@ func (c *CachedInteractiveRepository) Get(ctx context.Context, biz string, id in
 	if err != nil {
 		return domain.Interactive{}, err
 	}
-	if err == nil {
-		res := c.toDomain(ie)
-		err = c.cache.Set(ctx, biz, id, res)
-		if err != nil {
-			c.l.Error("回写缓存失败",
-				logger.String("biz", biz),
-				logger.Int64("bizId", id),
-				logger.Error(err))
-		}
-		return res, nil
+	res := c.toDomain(ie)
+	err = c.cache.Set(ctx, biz, id, res)
+	if err != nil {
+		c.l.Error("回写缓存失败",
+			logger.String("biz", biz),
+			logger.Int64("bizId", id),
+			logger.Error(err))
 	}
-	return intr, err
+	return res, nil
 }
 
 func (c *CachedInteractiveRepository) Liked(ctx context.Context,
@@ -113,7 +110,19 @@ func (c *CachedInteractiveRepository) IncrLike(ctx context.Context, biz string, 
 	if err != nil {
 		return err
 	}
-	return c.cache.IncrLikeCntIfPresent(ctx, biz, id)
+	err = c.cache.IncrLikeCntIfPresent(ctx, biz, id)
+	if err != nil {
+		return err
+	}
+	err = c.cache.IncrRankingIfPresent(ctx, biz, id)
+	if err == cache.RankingUpdateErr {
+		val, err := c.dao.Get(ctx, biz, id)
+		if err != nil {
+			return err
+		}
+		return c.cache.SetRankingScore(ctx, biz, id, val.LikeCnt)
+	}
+	return err
 }
 
 func (c *CachedInteractiveRepository) DecrLike(ctx context.Context, biz string, id int64, uid int64) error {

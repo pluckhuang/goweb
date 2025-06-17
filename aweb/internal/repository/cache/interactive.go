@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -14,7 +15,13 @@ import (
 var (
 	//go:embed lua/incr_cnt.lua
 	luaIncrCnt string
+	//go:embed lua/interactive_ranking_incr.lua
+	luaRankingIncr string
+	//go:embed lua/interactive_ranking_set.lua
+	luaRankingSet string
 )
+
+var RankingUpdateErr = errors.New("指定的元素不存在")
 
 const fieldReadCnt = "read_cnt"
 const fieldLikeCnt = "like_cnt"
@@ -27,10 +34,16 @@ type InteractiveCache interface {
 	IncrCollectCntIfPresent(ctx context.Context, biz string, id int64) error
 	Get(ctx context.Context, biz string, id int64) (domain.Interactive, error)
 	Set(ctx context.Context, biz string, bizId int64, res domain.Interactive) error
+	// IncrRankingIfPresent 如果排名数据存在就+1
+	IncrRankingIfPresent(ctx context.Context, biz string, bizId int64) error
+	// SetRankingScore 如果排名数据不存在就把数据库中读取到的更新到缓存，如果更新过就+1
+	SetRankingScore(ctx context.Context, biz string, bizId int64, count int64) error
+	LikeTop(ctx context.Context, biz string) ([]domain.Interactive, error)
 }
 
 type InteractiveRedisCache struct {
-	client redis.Cmdable
+	client     redis.Cmdable
+	expiration time.Duration
 }
 
 func NewInteractiveRedisCache(client redis.Cmdable) InteractiveCache {
@@ -98,4 +111,46 @@ func (i *InteractiveRedisCache) IncrReadCntIfPresent(ctx context.Context,
 
 func (i *InteractiveRedisCache) key(biz string, bizId int64) string {
 	return fmt.Sprintf("interactive:%s:%d", biz, bizId)
+}
+
+func (i *InteractiveRedisCache) topKey(biz string) string {
+	return fmt.Sprintf("top:%d:%s", 100, biz)
+}
+
+func (i *InteractiveRedisCache) LikeTop(ctx context.Context, biz string) ([]domain.Interactive, error) {
+	var start int64 = 0
+	var end int64 = 99
+	key := i.topKey(biz)
+	res, err := i.client.ZRevRangeWithScores(ctx, key, start, end).Result()
+	if err != nil {
+		return nil, err
+	}
+	interacts := make([]domain.Interactive, 0, 100)
+	for _, item := range res {
+		idStr := item.Member.(string)
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			continue // 忽略错误
+		}
+		interacts = append(interacts, domain.Interactive{
+			BizId:   id,
+			LikeCnt: int64(item.Score),
+		})
+	}
+	return interacts, nil
+}
+
+func (r *InteractiveRedisCache) IncrRankingIfPresent(ctx context.Context, biz string, bizId int64) error {
+	res, err := r.client.Eval(ctx, luaRankingIncr, []string{r.topKey(biz)}, bizId).Result()
+	if err != nil {
+		return err
+	}
+	if res.(int64) == 0 {
+		return RankingUpdateErr
+	}
+	return nil
+}
+
+func (r *InteractiveRedisCache) SetRankingScore(ctx context.Context, biz string, bizId int64, count int64) error {
+	return r.client.Eval(ctx, luaRankingSet, []string{r.topKey(biz)}, bizId, count).Err()
 }
