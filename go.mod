@@ -15,6 +15,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
 	github.com/gotomicro/redis-lock v0.0.3
+	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/lithammer/shortuuid/v4 v4.2.0
 	github.com/prometheus/client_golang v1.22.0
@@ -75,6 +76,7 @@ require (
 	github.com/gorilla/sessions v1.2.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect

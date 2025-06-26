@@ -51,6 +51,7 @@ func (i *Idempotent) Do(ctx context.Context, idempotentKey string, handler Handl
 	if err != nil {
 		// 数据库唯一索引冲突
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			X
 			return errors.New("数据库唯一索引冲突，重复请求")
 		}
 		return err
