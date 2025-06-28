@@ -42,20 +42,45 @@ func newBreaker() *gobreaker.CircuitBreaker {
 	return cb
 }
 
-type GRestClient struct {
-	cb     *gobreaker.CircuitBreaker
+type GCircuitBreakerInterface interface {
+	Execute(func() (interface{}, error)) (interface{}, error)
+}
+type GRetryableHttpInterface interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+// Adapter to allow *retryablehttp.Client to be used as GRetryableHttpInterface
+type retryableHttpAdapter struct {
 	client *retryablehttp.Client
 }
 
+func (a *retryableHttpAdapter) Do(req *http.Request) (*http.Response, error) {
+	// Convert *http.Request to *retryablehttp.Request
+	retryableReq, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	return a.client.Do(retryableReq)
+}
+
 func NewGRestClient() *GRestClient {
+	return NewRestClient(newBreaker(), &retryableHttpAdapter{client: newRetryableClient()})
+}
+
+func NewRestClient(cb GCircuitBreakerInterface, client GRetryableHttpInterface) *GRestClient {
 	return &GRestClient{
-		cb:     newBreaker(),
-		client: newRetryableClient(),
+		cb:     cb,
+		client: client,
 	}
 }
 
+type GRestClient struct {
+	cb     GCircuitBreakerInterface
+	client GRetryableHttpInterface
+}
+
 func (c *GRestClient) getReq(url string) (string, error) {
-	req, err := retryablehttp.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("创建请求失败: %w", err)
 	}
@@ -76,7 +101,7 @@ func (c *GRestClient) getReq(url string) (string, error) {
 }
 
 func (c *GRestClient) postReq(url string, body []byte) (string, error) {
-	req, err := retryablehttp.NewRequest("POST", url, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return "", fmt.Errorf("创建请求失败: %w", err)
 	}
