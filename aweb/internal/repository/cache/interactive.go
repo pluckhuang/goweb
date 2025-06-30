@@ -38,7 +38,7 @@ type InteractiveCache interface {
 	IncrRankingIfPresent(ctx context.Context, biz string, bizId int64) error
 	// SetRankingScore 如果排名数据不存在就把数据库中读取到的更新到缓存，如果更新过就+1
 	SetRankingScore(ctx context.Context, biz string, bizId int64, count int64) error
-	LikeTop(ctx context.Context, biz string) ([]domain.Interactive, error)
+	LikeTopN(ctx context.Context, biz string, n int64) ([]domain.Interactive, error)
 }
 
 type InteractiveRedisCache struct {
@@ -117,15 +117,15 @@ func (i *InteractiveRedisCache) topKey(biz string) string {
 	return fmt.Sprintf("top:%d:%s", 100, biz)
 }
 
-func (i *InteractiveRedisCache) LikeTop(ctx context.Context, biz string) ([]domain.Interactive, error) {
+func (i *InteractiveRedisCache) LikeTopN(ctx context.Context, biz string, n int64) ([]domain.Interactive, error) {
 	var start int64 = 0
-	var end int64 = 99
+	var end int64 = n - 1
 	key := i.topKey(biz)
 	res, err := i.client.ZRevRangeWithScores(ctx, key, start, end).Result()
 	if err != nil {
 		return nil, err
 	}
-	interacts := make([]domain.Interactive, 0, 100)
+	interacts := make([]domain.Interactive, 0, n)
 	for _, item := range res {
 		idStr := item.Member.(string)
 		id, err := strconv.ParseInt(idStr, 10, 64)

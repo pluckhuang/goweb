@@ -53,7 +53,7 @@ func (h *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 	// 传入一个参数，true 就是点赞, false 就是不点赞
 	pub.POST("/like", ginx.WrapBodyAndClaims(h.Like))
 	pub.POST("/collect", ginx.WrapBodyAndClaims(h.Collect))
-	pub.GET("/like_topN", ginx.WrapBodyAndClaims(h.LikeTopN)) // topN
+	pub.GET("/likeTop", ginx.WrapClaims(h.LikeTopN)) // topN
 }
 
 // Edit 接收 Article 输入，返回一个 ID，文章的 ID
@@ -314,7 +314,17 @@ func (h *ArticleHandler) LikeTopN(ctx *gin.Context, uc jwt.UserClaims) (ginx.Res
 		}, fmt.Errorf("topN 参数错误 %s", topN)
 	}
 
-	arts, err := h.svc.LikeTopN(ctx, n)
+	interactives, err := h.intrSvc.LikeTopN(ctx, "article", int64(n))
+	if err != nil {
+		return ginx.Result{
+			Code: 5, Msg: "系统错误",
+		}, err
+	}
+
+	artIds := slice.Map(interactives, func(idx int, intr domain.Interactive) int64 {
+		return intr.BizId
+	})
+	arts, err := h.svc.GetByIds(ctx, artIds)
 	if err != nil {
 		return ginx.Result{
 			Code: 5, Msg: "系统错误",

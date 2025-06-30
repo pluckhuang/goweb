@@ -16,6 +16,7 @@ type ArticleDAO interface {
 	SyncStatus(ctx context.Context, uid int64, id int64, status uint8) error
 	GetByAuthor(ctx context.Context, uid int64, offset int, limit int) ([]Article, error)
 	GetById(ctx context.Context, id int64) (Article, error)
+	GetByIds(ctx context.Context, ids []int64) ([]Article, error)
 	GetPubById(ctx context.Context, id int64) (PublishedArticle, error)
 	ListPub(ctx context.Context, start time.Time, offset int, limit int) ([]PublishedArticle, error)
 }
@@ -48,6 +49,23 @@ func (a *ArticleGORMDAO) GetById(ctx context.Context, id int64) (Article, error)
 	err := a.db.WithContext(ctx).
 		Where("id = ?", id).First(&art).Error
 	return art, err
+}
+
+func (a *ArticleGORMDAO) GetByIds(ctx context.Context, ids []int64) ([]Article, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var arts []Article
+	err := a.db.WithContext(ctx).
+		Where("id IN ?", ids).
+		Find(&arts).Error
+	if err != nil {
+		return nil, err
+	}
+	if len(arts) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return arts, nil
 }
 
 func (a *ArticleGORMDAO) GetByAuthor(ctx context.Context, uid int64, offset int, limit int) ([]Article, error) {

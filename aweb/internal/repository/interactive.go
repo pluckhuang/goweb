@@ -21,6 +21,8 @@ type InteractiveRepository interface {
 	Liked(ctx context.Context, biz string, id int64, uid int64) (bool, error)
 	Collected(ctx context.Context, biz string, id int64, uid int64) (bool, error)
 	GetByIds(ctx context.Context, biz string, ids []int64) ([]domain.Interactive, error)
+	// LikeTopN 返回点赞数最多的前 N 个互动数据
+	LikeTopN(ctx context.Context, biz string, n int64) ([]domain.Interactive, error)
 }
 
 type CachedInteractiveRepository struct {
@@ -166,4 +168,8 @@ func (c *CachedInteractiveRepository) toDomain(ie dao.Interactive) domain.Intera
 		LikeCnt:    ie.LikeCnt,
 		CollectCnt: ie.CollectCnt,
 	}
+}
+
+func (c *CachedInteractiveRepository) LikeTopN(ctx context.Context, biz string, n int64) ([]domain.Interactive, error) {
+	return c.cache.LikeTopN(ctx, biz, n)
 }

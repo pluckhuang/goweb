@@ -17,6 +17,7 @@ type ArticleService interface {
 	Withdraw(ctx context.Context, uid int64, id int64) error
 	GetByAuthor(ctx context.Context, uid int64, offset int, limit int) ([]domain.Article, error)
 	GetById(ctx context.Context, id int64) (domain.Article, error)
+	GetByIds(ctx context.Context, ids []int64) ([]domain.Article, error)
 	GetPubById(ctx context.Context, id, uid int64) (domain.Article, error)
 	ListPub(ctx context.Context, start time.Time, offset, limit int) ([]domain.Article, error)
 }
@@ -56,6 +57,21 @@ func (a *articleService) GetPubById(ctx context.Context, id, uid int64) (domain.
 
 func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
 	return a.repo.GetById(ctx, id)
+}
+
+func (a *articleService) GetByIds(ctx context.Context, ids []int64) ([]domain.Article, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	arts := make([]domain.Article, 0, len(ids))
+	for _, id := range ids {
+		art, err := a.repo.GetById(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		arts = append(arts, art)
+	}
+	return arts, nil
 }
 
 func (a *articleService) GetByAuthor(ctx context.Context, uid int64, offset int, limit int) ([]domain.Article, error) {

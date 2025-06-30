@@ -19,6 +19,7 @@ type ArticleRepository interface {
 	SyncStatus(ctx context.Context, uid int64, id int64, status domain.ArticleStatus) error
 	GetByAuthor(ctx context.Context, uid int64, offset int, limit int) ([]domain.Article, error)
 	GetById(ctx context.Context, id int64) (domain.Article, error)
+	GetByIds(ctx context.Context, ids []int64) ([]domain.Article, error)
 	GetPubById(ctx context.Context, id int64) (domain.Article, error)
 	ListPub(ctx context.Context, start time.Time, offset int, limit int) ([]domain.Article, error)
 }
@@ -93,6 +94,20 @@ func (c *CachedArticleRepository) GetById(ctx context.Context, id int64) (domain
 		}
 	}()
 	return res, nil
+}
+
+func (c *CachedArticleRepository) GetByIds(ctx context.Context, ids []int64) ([]domain.Article, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	arts, err := c.dao.GetByIds(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	return slice.Map[dao.Article, domain.Article](arts,
+		func(idx int, src dao.Article) domain.Article {
+			return c.toDomain(src)
+		}), nil
 }
 
 func (c *CachedArticleRepository) GetByAuthor(ctx context.Context, uid int64, offset int, limit int) ([]domain.Article, error) {
