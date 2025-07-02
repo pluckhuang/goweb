@@ -92,5 +92,8 @@ func InitGinMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler, l logger.Lo
 			l.Debug("", logger.Field{Key: "req", Val: al})
 		}).AllowReqBody().AllowRespBody().Build(),
 		middleware.NewLoginJWTMiddlewareBuilder(hdl).CheckLogin(),
+		func(ctx *gin.Context) {
+			println("这是我的 Middleware2")
+		},
 	}
 }

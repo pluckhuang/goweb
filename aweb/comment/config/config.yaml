@@ -1,0 +1,10 @@
+db:
+  dsn: "root:password@tcp(localhost:13306)/aweb"
+
+grpc:
+  server:
+    port: "8076"
+    etcdTTL: 60
+etcd:
+  endpoints:
+    - "localhost:12379"
