@@ -33,9 +33,9 @@ func TestCommentServiceClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetCommentList err: %v", err)
 	}
-	t.Logf("一级评论: %+v", listResp.Comments)
+	t.Logf("一级评论: %+v, 数量: %d, hasMore: %+v", listResp.Comments, len(listResp.Comments), listResp.HasMore)
 
-	// 2. 创建评论
+	// 2. 创建1级评论
 	createResp, err := client.CreateComment(ctx, &commentv1.CreateCommentRequest{
 		Comment: &commentv1.Comment{
 			Uid:     1,
@@ -51,16 +51,41 @@ func TestCommentServiceClient(t *testing.T) {
 	}
 	t.Logf("创建评论: %+v", createResp)
 
-	// 3. 删除评论
-	_, err = client.DeleteComment(ctx, &commentv1.DeleteCommentRequest{
-		Id: 1,
+	// 3. 获取一级评论 again
+	listResp, err = client.GetCommentList(ctx, &commentv1.CommentListRequest{
+		Biz:   "article",
+		Bizid: 123,
+		MinId: 0,
+		Limit: 10,
 	})
 	if err != nil {
-		t.Fatalf("DeleteComment err: %v", err)
+		t.Fatalf("GetCommentList err: %v", err)
 	}
-	t.Log("删除评论成功")
+	t.Logf("再次获取一级评论: %+v, 数量: %d, hasMore: %+v", listResp.Comments, len(listResp.Comments), listResp.HasMore)
 
-	// 4. 获取更多回复
+	// 4. 创建2级评论
+	createResp, err = client.CreateComment(ctx, &commentv1.CreateCommentRequest{
+		Comment: &commentv1.Comment{
+			Uid:     1,
+			Biz:     "article",
+			Bizid:   123,
+			Content: "abc",
+			RootComment: &commentv1.Comment{
+				Id: 1, // 根评论ID
+			},
+			ParentComment: &commentv1.Comment{
+				Id: 1, // 父评论ID
+			},
+			Ctime: timestamppb.Now(),
+			Utime: timestamppb.Now(),
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateComment err: %v", err)
+	}
+	t.Logf("创建2级评论: %+v", createResp)
+
+	// 5. 获取更多回复
 	moreResp, err := client.GetMoreReplies(ctx, &commentv1.GetMoreRepliesRequest{
 		Rid:   1,
 		MaxId: 0,
@@ -69,5 +94,15 @@ func TestCommentServiceClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetMoreReplies err: %v", err)
 	}
-	t.Logf("更多回复: %+v", moreResp.Replies)
+	t.Logf("更多回复: %+v, 数量: %d, hasMore: %+v", moreResp.Replies, len(moreResp.Replies), moreResp.HasMore)
+
+	// 6. 删除评论
+	_, err = client.DeleteComment(ctx, &commentv1.DeleteCommentRequest{
+		Id: 1,
+	})
+	if err != nil {
+		t.Fatalf("DeleteComment err: %v", err)
+	}
+	t.Log("删除评论成功")
+
 }

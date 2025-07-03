@@ -14,13 +14,13 @@ type CommentDAO interface {
 	Insert(ctx context.Context, u Comment) error
 	// FindByBiz 只查找一级评论
 	FindByBiz(ctx context.Context, biz string,
-		bizId, minID, limit int64) ([]Comment, error)
+		bizId, minID, limit int64) ([]Comment, bool, error)
 	// 查找一级评论对应的子评论
 	FindRepliesByPid(ctx context.Context, pid int64, offset, limit int) ([]Comment, error)
 	// Delete 删除本节点和其对应的子节点
 	Delete(ctx context.Context, u Comment) error
 	// 根据根评论的id和当前评论的id查找对应的回复
-	FindRepliesByRid(ctx context.Context, rid int64, id int64, limit int64) ([]Comment, error)
+	FindRepliesByRid(ctx context.Context, rid int64, id int64, limit int64) ([]Comment, bool, error)
 }
 
 // Comment 把这个评论的表结构设计好
@@ -65,14 +65,15 @@ func (c *GORMCommentDAO) Insert(ctx context.Context, u Comment) error {
 }
 
 func (c *GORMCommentDAO) FindByBiz(ctx context.Context, biz string,
-	bizId, minID, limit int64) ([]Comment, error) {
+	bizId, minID, limit int64) ([]Comment, bool, error) {
 	var res []Comment
 	err := c.db.WithContext(ctx).
 		Where("biz = ? AND biz_id = ? AND id < ? AND pid IS NULL", biz, bizId, minID).
-		Limit(int(limit)).
+		Limit(int(limit) + 1).
 		Order("id DESC").
 		Find(&res).Error
-	return res, err
+
+	return res[:min(len(res), int(limit))], len(res) > int(limit), err
 }
 
 // FindRepliesByPid 查找评论的直接评论
@@ -93,11 +94,11 @@ func (c *GORMCommentDAO) Delete(ctx context.Context, u Comment) error {
 }
 
 func (c *GORMCommentDAO) FindRepliesByRid(ctx context.Context,
-	rid int64, id int64, limit int64) ([]Comment, error) {
+	rid int64, id int64, limit int64) ([]Comment, bool, error) {
 	var res []Comment
 	err := c.db.WithContext(ctx).
 		Where("root_id = ? AND id > ?", rid, id).
 		Order("id ASC").
-		Limit(int(limit)).Find(&res).Error
-	return res, err
+		Limit(int(limit) + 1).Find(&res).Error
+	return res[:min(len(res), int(limit))], len(res) > int(limit), err
 }

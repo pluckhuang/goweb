@@ -66,17 +66,18 @@ func (c *CommentServiceServer) GetCommentList(ctx context.Context, request *comm
 	if minID <= 0 {
 		minID = math.MaxInt64
 	}
-	domainComments, err := c.svc.
+	domainComments, hasMore, err := c.svc.
 		GetCommentList(ctx,
 			request.GetBiz(),
 			request.GetBizid(),
-			request.GetMinId(),
+			minID,
 			request.GetLimit())
 	if err != nil {
 		return nil, err
 	}
 	return &commentv1.CommentListResponse{
 		Comments: c.toDTO(domainComments),
+		HasMore:  hasMore,
 	}, nil
 }
 
@@ -127,11 +128,12 @@ func (c *CommentServiceServer) toDTO(domainComments []domain.Comment) []*comment
 }
 
 func (c *CommentServiceServer) GetMoreReplies(ctx context.Context, req *commentv1.GetMoreRepliesRequest) (*commentv1.GetMoreRepliesResponse, error) {
-	cs, err := c.svc.GetMoreReplies(ctx, req.Rid, req.MaxId, req.Limit)
+	cs, hasMore, err := c.svc.GetMoreReplies(ctx, req.Rid, req.MaxId, req.Limit)
 	if err != nil {
 		return nil, err
 	}
 	return &commentv1.GetMoreRepliesResponse{
 		Replies: c.toDTO(cs),
+		HasMore: hasMore,
 	}, nil
 }

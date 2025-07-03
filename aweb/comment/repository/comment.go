@@ -15,13 +15,13 @@ type CommentRepository interface {
 	// FindByBiz 根据 ID 倒序查找
 	// 并且会返回每个评论的三条直接回复
 	FindByBiz(ctx context.Context, biz string,
-		bizId, minID, limit int64) ([]domain.Comment, error)
+		bizId, minID, limit int64) ([]domain.Comment, bool, error)
 	// 删除评论，删除本评论何其子评论
 	DeleteComment(ctx context.Context, comment domain.Comment) error
 	// CreateComment 创建评论
 	CreateComment(ctx context.Context, comment domain.Comment) error
 	// 获取更多的一级评论对应的子评论
-	GetMoreReplies(ctx context.Context, rid int64, id int64, limit int64) ([]domain.Comment, error)
+	GetMoreReplies(ctx context.Context, rid int64, id int64, limit int64) ([]domain.Comment, bool, error)
 }
 
 type CachedCommentRepo struct {
@@ -37,17 +37,16 @@ func NewCommentRepo(commentDAO dao.CommentDAO, l logger.LoggerV1) CommentReposit
 }
 
 func (c *CachedCommentRepo) FindByBiz(ctx context.Context, biz string,
-	bizId, minID, limit int64) ([]domain.Comment, error) {
-	daoComments, err := c.dao.FindByBiz(ctx, biz, bizId, minID, limit)
+	bizId, minID, limit int64) ([]domain.Comment, bool, error) {
+	daoComments, hasMore, err := c.dao.FindByBiz(ctx, biz, bizId, minID, limit)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	res := make([]*domain.Comment, 0, len(daoComments))
 	// 找子评论了，找三条
 	var eg errgroup.Group
 	downgrade := ctx.Value("downgrade") == "true"
 	for _, dc := range daoComments {
-		dc := dc
 		cm := c.toDomain(dc)
 		cmPtr := &cm
 		res = append(res, cmPtr)
@@ -71,7 +70,7 @@ func (c *CachedCommentRepo) FindByBiz(ctx context.Context, biz string,
 	for _, cmPtr := range res {
 		comments = append(comments, *cmPtr)
 	}
-	return comments, eg.Wait()
+	return comments, hasMore, eg.Wait()
 }
 
 func (c *CachedCommentRepo) DeleteComment(ctx context.Context, comment domain.Comment) error {
@@ -84,16 +83,16 @@ func (c *CachedCommentRepo) CreateComment(ctx context.Context, comment domain.Co
 	return c.dao.Insert(ctx, c.toEntity(comment))
 }
 
-func (c *CachedCommentRepo) GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, error) {
-	cs, err := c.dao.FindRepliesByRid(ctx, rid, maxID, limit)
+func (c *CachedCommentRepo) GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, bool, error) {
+	cs, hasMore, err := c.dao.FindRepliesByRid(ctx, rid, maxID, limit)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	res := make([]domain.Comment, 0, len(cs))
 	for _, cm := range cs {
 		res = append(res, c.toDomain(cm))
 	}
-	return res, nil
+	return res, hasMore, nil
 }
 
 func (c *CachedCommentRepo) toDomain(daoComment dao.Comment) domain.Comment {

@@ -32,6 +32,7 @@ message CommentListRequest {
 
 message CommentListResponse {
   repeated Comment comments = 1;
+  bool has_more = 2; // 表示是否还有更多数据
 }
 
 message DeleteCommentRequest {
@@ -57,6 +58,7 @@ message GetMoreRepliesRequest {
 }
 message GetMoreRepliesResponse {
   repeated Comment replies = 1;
+  bool has_more = 2; // 表示是否还有更多数据
 }
 
 message Comment {

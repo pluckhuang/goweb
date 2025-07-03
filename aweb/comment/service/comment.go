@@ -9,13 +9,13 @@ import (
 
 type CommentService interface {
 	// 获取一级评论 按照 ID 倒序排序
-	GetCommentList(ctx context.Context, biz string, bizId, minID, limit int64) ([]domain.Comment, error)
+	GetCommentList(ctx context.Context, biz string, bizId, minID, limit int64) ([]domain.Comment, bool, error)
 	// 删除评论，删除本评论何其子评论
 	DeleteComment(ctx context.Context, id int64) error
 	//  创建评论
 	CreateComment(ctx context.Context, comment domain.Comment) error
 	// 获取更多的一级评论对应的子评论
-	GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, error)
+	GetMoreReplies(ctx context.Context, rid int64, maxID int64, limit int64) ([]domain.Comment, bool, error)
 }
 
 type commentService struct {
@@ -39,16 +39,16 @@ func (c *commentService) DeleteComment(ctx context.Context, id int64) error {
 }
 
 func (c *commentService) GetCommentList(ctx context.Context, biz string,
-	bizId, minID, limit int64) ([]domain.Comment, error) {
-	list, err := c.repo.FindByBiz(ctx, biz, bizId, minID, limit)
+	bizId, minID, limit int64) ([]domain.Comment, bool, error) {
+	list, hasMore, err := c.repo.FindByBiz(ctx, biz, bizId, minID, limit)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return list, err
+	return list, hasMore, err
 }
 
 func (c *commentService) GetMoreReplies(ctx context.Context,
 	rid int64,
-	maxID int64, limit int64) ([]domain.Comment, error) {
+	maxID int64, limit int64) ([]domain.Comment, bool, error) {
 	return c.repo.GetMoreReplies(ctx, rid, maxID, limit)
 }
