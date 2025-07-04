@@ -35,6 +35,7 @@ func (g *GORMFollowRelationDAO) CreateFollowRelation(ctx context.Context, f Foll
 
 func (g *GORMFollowRelationDAO) UpdateStatus(ctx context.Context, followee int64, follower int64, status uint8) error {
 	return g.db.WithContext(ctx).
+		Model(&FollowRelation{}).
 		Where("follower = ? AND followee = ?", follower, followee).
 		Updates(map[string]any{
 			"status": status,
@@ -46,8 +47,6 @@ func (g *GORMFollowRelationDAO) CntFollower(ctx context.Context, uid int64) (int
 	var res int64
 	err := g.db.WithContext(ctx).
 		Select("count(follower)").
-		// 如果要是没有额外索引，不用怀疑，全表扫描
-		// 可以考虑在 followee 额外创建一个索引
 		Where("followee = ? AND status = ?",
 			uid, FollowRelationStatusActive).Count(&res).Error
 	return res, err
@@ -57,18 +56,26 @@ func (g *GORMFollowRelationDAO) CntFollowee(ctx context.Context, uid int64) (int
 	var res int64
 	err := g.db.WithContext(ctx).
 		Select("count(followee)").
-		// <follower, followee>
 		Where("follower = ? AND status = ?",
 			uid, FollowRelationStatusActive).Count(&res).Error
 	return res, err
 }
 
-func (g *GORMFollowRelationDAO) FollowRelationList(ctx context.Context,
-	// 可以考虑只查询 follower id，于是命中了覆盖索引
+func (g *GORMFollowRelationDAO) FollowerRelationList(ctx context.Context,
 	follower, offset, limit int64) ([]FollowRelation, error) {
 	var res []FollowRelation
 	err := g.db.WithContext(ctx).
 		Where("follower = ? AND status = ?", follower, FollowRelationStatusActive).
+		Offset(int(offset)).Limit(int(limit)).
+		Find(&res).Error
+	return res, err
+}
+
+func (g *GORMFollowRelationDAO) FolloweeRelationList(ctx context.Context,
+	followee, offset, limit int64) ([]FollowRelation, error) {
+	var res []FollowRelation
+	err := g.db.WithContext(ctx).
+		Where("followee = ? AND status = ?", followee, FollowRelationStatusActive).
 		Offset(int(offset)).Limit(int(limit)).
 		Find(&res).Error
 	return res, err

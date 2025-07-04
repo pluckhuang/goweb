@@ -79,3 +79,16 @@ func (f *FollowServiceServer) convertToView(relation domain.FollowRelation) *fol
 		Follower: relation.Follower,
 	}
 }
+
+func (f *FollowServiceServer) GetFollowStatics(ctx context.Context, request *followv1.GetFollowStaticsRequest) (*followv1.GetFollowStaticsResponse, error) {
+	statics, err := f.svc.GetFollowStatics(ctx, request.GetUserId())
+	if err != nil {
+		return nil, err
+	}
+	return &followv1.GetFollowStaticsResponse{
+		FollowStatics: &followv1.FollowStatics{
+			Followers: statics.Followers,
+			Followees: statics.Followees,
+		},
+	}, nil
+}

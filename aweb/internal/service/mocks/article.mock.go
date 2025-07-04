@@ -72,6 +72,21 @@ func (mr *MockArticleServiceMockRecorder) GetById(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockArticleService)(nil).GetById), ctx, id)
 }
 
+// GetByIds mocks base method.
+func (m *MockArticleService) GetByIds(ctx context.Context, ids []int64) ([]domain.Article, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByIds", ctx, ids)
+	ret0, _ := ret[0].([]domain.Article)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByIds indicates an expected call of GetByIds.
+func (mr *MockArticleServiceMockRecorder) GetByIds(ctx, ids any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByIds", reflect.TypeOf((*MockArticleService)(nil).GetByIds), ctx, ids)
+}
+
 // GetPubById mocks base method.
 func (m *MockArticleService) GetPubById(ctx context.Context, id, uid int64) (domain.Article, error) {
 	m.ctrl.T.Helper()

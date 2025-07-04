@@ -81,7 +81,7 @@ func (x *FollowRelation) GetFollowee() int64 {
 	return 0
 }
 
-type FollowStatic struct {
+type FollowStatics struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 被多少人关注
 	Followers int64 `protobuf:"varint,1,opt,name=followers,proto3" json:"followers,omitempty"`
@@ -91,20 +91,20 @@ type FollowStatic struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *FollowStatic) Reset() {
-	*x = FollowStatic{}
+func (x *FollowStatics) Reset() {
+	*x = FollowStatics{}
 	mi := &file_follow_v1_follow_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FollowStatic) String() string {
+func (x *FollowStatics) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FollowStatic) ProtoMessage() {}
+func (*FollowStatics) ProtoMessage() {}
 
-func (x *FollowStatic) ProtoReflect() protoreflect.Message {
+func (x *FollowStatics) ProtoReflect() protoreflect.Message {
 	mi := &file_follow_v1_follow_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -116,46 +116,46 @@ func (x *FollowStatic) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FollowStatic.ProtoReflect.Descriptor instead.
-func (*FollowStatic) Descriptor() ([]byte, []int) {
+// Deprecated: Use FollowStatics.ProtoReflect.Descriptor instead.
+func (*FollowStatics) Descriptor() ([]byte, []int) {
 	return file_follow_v1_follow_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *FollowStatic) GetFollowers() int64 {
+func (x *FollowStatics) GetFollowers() int64 {
 	if x != nil {
 		return x.Followers
 	}
 	return 0
 }
 
-func (x *FollowStatic) GetFollowees() int64 {
+func (x *FollowStatics) GetFollowees() int64 {
 	if x != nil {
 		return x.Followees
 	}
 	return 0
 }
 
-type GetFollowStaticRequest struct {
+type GetFollowStaticsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Followee      int64                  `protobuf:"varint,1,opt,name=followee,proto3" json:"followee,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetFollowStaticRequest) Reset() {
-	*x = GetFollowStaticRequest{}
+func (x *GetFollowStaticsRequest) Reset() {
+	*x = GetFollowStaticsRequest{}
 	mi := &file_follow_v1_follow_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetFollowStaticRequest) String() string {
+func (x *GetFollowStaticsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetFollowStaticRequest) ProtoMessage() {}
+func (*GetFollowStaticsRequest) ProtoMessage() {}
 
-func (x *GetFollowStaticRequest) ProtoReflect() protoreflect.Message {
+func (x *GetFollowStaticsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_follow_v1_follow_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -167,39 +167,39 @@ func (x *GetFollowStaticRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetFollowStaticRequest.ProtoReflect.Descriptor instead.
-func (*GetFollowStaticRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetFollowStaticsRequest.ProtoReflect.Descriptor instead.
+func (*GetFollowStaticsRequest) Descriptor() ([]byte, []int) {
 	return file_follow_v1_follow_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetFollowStaticRequest) GetFollowee() int64 {
+func (x *GetFollowStaticsRequest) GetUserId() int64 {
 	if x != nil {
-		return x.Followee
+		return x.UserId
 	}
 	return 0
 }
 
-type GetFollowStaticResponse struct {
+type GetFollowStaticsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	FollowStatic  *FollowStatic          `protobuf:"bytes,1,opt,name=followStatic,proto3" json:"followStatic,omitempty"`
+	FollowStatics *FollowStatics         `protobuf:"bytes,1,opt,name=followStatics,proto3" json:"followStatics,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetFollowStaticResponse) Reset() {
-	*x = GetFollowStaticResponse{}
+func (x *GetFollowStaticsResponse) Reset() {
+	*x = GetFollowStaticsResponse{}
 	mi := &file_follow_v1_follow_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetFollowStaticResponse) String() string {
+func (x *GetFollowStaticsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetFollowStaticResponse) ProtoMessage() {}
+func (*GetFollowStaticsResponse) ProtoMessage() {}
 
-func (x *GetFollowStaticResponse) ProtoReflect() protoreflect.Message {
+func (x *GetFollowStaticsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_follow_v1_follow_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -211,14 +211,14 @@ func (x *GetFollowStaticResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetFollowStaticResponse.ProtoReflect.Descriptor instead.
-func (*GetFollowStaticResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetFollowStaticsResponse.ProtoReflect.Descriptor instead.
+func (*GetFollowStaticsResponse) Descriptor() ([]byte, []int) {
 	return file_follow_v1_follow_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetFollowStaticResponse) GetFollowStatic() *FollowStatic {
+func (x *GetFollowStaticsResponse) GetFollowStatics() *FollowStatics {
 	if x != nil {
-		return x.FollowStatic
+		return x.FollowStatics
 	}
 	return nil
 }
@@ -609,6 +609,8 @@ func (*CancelFollowResponse) Descriptor() ([]byte, []int) {
 type GetFollowerRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Followee      int64                  `protobuf:"varint,1,opt,name=followee,proto3" json:"followee,omitempty"`
+	Offset        int64                  `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
+	Limit         int64                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -646,6 +648,20 @@ func (*GetFollowerRequest) Descriptor() ([]byte, []int) {
 func (x *GetFollowerRequest) GetFollowee() int64 {
 	if x != nil {
 		return x.Followee
+	}
+	return 0
+}
+
+func (x *GetFollowerRequest) GetOffset() int64 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *GetFollowerRequest) GetLimit() int64 {
+	if x != nil {
+		return x.Limit
 	}
 	return 0
 }
@@ -702,14 +718,14 @@ const file_follow_v1_follow_proto_rawDesc = "" +
 	"\x0eFollowRelation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\bfollower\x18\x02 \x01(\x03R\bfollower\x12\x1a\n" +
-	"\bfollowee\x18\x03 \x01(\x03R\bfollowee\"J\n" +
-	"\fFollowStatic\x12\x1c\n" +
+	"\bfollowee\x18\x03 \x01(\x03R\bfollowee\"K\n" +
+	"\rFollowStatics\x12\x1c\n" +
 	"\tfollowers\x18\x01 \x01(\x03R\tfollowers\x12\x1c\n" +
-	"\tfollowees\x18\x02 \x01(\x03R\tfollowees\"4\n" +
-	"\x16GetFollowStaticRequest\x12\x1a\n" +
-	"\bfollowee\x18\x01 \x01(\x03R\bfollowee\"V\n" +
-	"\x17GetFollowStaticResponse\x12;\n" +
-	"\ffollowStatic\x18\x01 \x01(\v2\x17.follow.v1.FollowStaticR\ffollowStatic\"^\n" +
+	"\tfollowees\x18\x02 \x01(\x03R\tfollowees\"2\n" +
+	"\x17GetFollowStaticsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"Z\n" +
+	"\x18GetFollowStaticsResponse\x12>\n" +
+	"\rfollowStatics\x18\x01 \x01(\v2\x18.follow.v1.FollowStaticsR\rfollowStatics\"^\n" +
 	"\x12GetFolloweeRequest\x12\x1a\n" +
 	"\bfollower\x18\x01 \x01(\x03R\bfollower\x12\x16\n" +
 	"\x06offset\x18\x02 \x01(\x03R\x06offset\x12\x14\n" +
@@ -728,19 +744,21 @@ const file_follow_v1_follow_proto_rawDesc = "" +
 	"\x13CancelFollowRequest\x12\x1a\n" +
 	"\bfollowee\x18\x01 \x01(\x03R\bfollowee\x12\x1a\n" +
 	"\bfollower\x18\x02 \x01(\x03R\bfollower\"\x16\n" +
-	"\x14CancelFollowResponse\"0\n" +
+	"\x14CancelFollowResponse\"^\n" +
 	"\x12GetFollowerRequest\x12\x1a\n" +
-	"\bfollowee\x18\x01 \x01(\x03R\bfollowee\"[\n" +
+	"\bfollowee\x18\x01 \x01(\x03R\bfollowee\x12\x16\n" +
+	"\x06offset\x18\x02 \x01(\x03R\x06offset\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x03R\x05limit\"[\n" +
 	"\x13GetFollowerResponse\x12D\n" +
-	"\x10follow_relations\x18\x01 \x03(\v2\x19.follow.v1.FollowRelationR\x0ffollowRelations2\xe0\x03\n" +
+	"\x10follow_relations\x18\x01 \x03(\v2\x19.follow.v1.FollowRelationR\x0ffollowRelations2\xe3\x03\n" +
 	"\rFollowService\x12=\n" +
 	"\x06Follow\x12\x18.follow.v1.FollowRequest\x1a\x19.follow.v1.FollowResponse\x12O\n" +
 	"\fCancelFollow\x12\x1e.follow.v1.CancelFollowRequest\x1a\x1f.follow.v1.CancelFollowResponse\x12L\n" +
 	"\vGetFollowee\x12\x1d.follow.v1.GetFolloweeRequest\x1a\x1e.follow.v1.GetFolloweeResponse\x12L\n" +
 	"\vGetFollower\x12\x1d.follow.v1.GetFollowerRequest\x1a\x1e.follow.v1.GetFollowerResponse\x12I\n" +
 	"\n" +
-	"FollowInfo\x12\x1c.follow.v1.FollowInfoRequest\x1a\x1d.follow.v1.FollowInfoResponse\x12X\n" +
-	"\x0fGetFollowStatic\x12!.follow.v1.GetFollowStaticRequest\x1a\".follow.v1.GetFollowStaticResponseB\xa4\x01\n" +
+	"FollowInfo\x12\x1c.follow.v1.FollowInfoRequest\x1a\x1d.follow.v1.FollowInfoResponse\x12[\n" +
+	"\x10GetFollowStatics\x12\".follow.v1.GetFollowStaticsRequest\x1a#.follow.v1.GetFollowStaticsResponseB\xa4\x01\n" +
 	"\rcom.follow.v1B\vFollowProtoP\x01ZAgithub.com/pluckhuang/goweb/aweb/api/proto/gen/follow/v1;followv1\xa2\x02\x03FXX\xaa\x02\tFollow.V1\xca\x02\tFollow\\V1\xe2\x02\x15Follow\\V1\\GPBMetadata\xea\x02\n" +
 	"Follow::V1b\x06proto3"
 
@@ -758,23 +776,23 @@ func file_follow_v1_follow_proto_rawDescGZIP() []byte {
 
 var file_follow_v1_follow_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_follow_v1_follow_proto_goTypes = []any{
-	(*FollowRelation)(nil),          // 0: follow.v1.FollowRelation
-	(*FollowStatic)(nil),            // 1: follow.v1.FollowStatic
-	(*GetFollowStaticRequest)(nil),  // 2: follow.v1.GetFollowStaticRequest
-	(*GetFollowStaticResponse)(nil), // 3: follow.v1.GetFollowStaticResponse
-	(*GetFolloweeRequest)(nil),      // 4: follow.v1.GetFolloweeRequest
-	(*GetFolloweeResponse)(nil),     // 5: follow.v1.GetFolloweeResponse
-	(*FollowInfoRequest)(nil),       // 6: follow.v1.FollowInfoRequest
-	(*FollowInfoResponse)(nil),      // 7: follow.v1.FollowInfoResponse
-	(*FollowRequest)(nil),           // 8: follow.v1.FollowRequest
-	(*FollowResponse)(nil),          // 9: follow.v1.FollowResponse
-	(*CancelFollowRequest)(nil),     // 10: follow.v1.CancelFollowRequest
-	(*CancelFollowResponse)(nil),    // 11: follow.v1.CancelFollowResponse
-	(*GetFollowerRequest)(nil),      // 12: follow.v1.GetFollowerRequest
-	(*GetFollowerResponse)(nil),     // 13: follow.v1.GetFollowerResponse
+	(*FollowRelation)(nil),           // 0: follow.v1.FollowRelation
+	(*FollowStatics)(nil),            // 1: follow.v1.FollowStatics
+	(*GetFollowStaticsRequest)(nil),  // 2: follow.v1.GetFollowStaticsRequest
+	(*GetFollowStaticsResponse)(nil), // 3: follow.v1.GetFollowStaticsResponse
+	(*GetFolloweeRequest)(nil),       // 4: follow.v1.GetFolloweeRequest
+	(*GetFolloweeResponse)(nil),      // 5: follow.v1.GetFolloweeResponse
+	(*FollowInfoRequest)(nil),        // 6: follow.v1.FollowInfoRequest
+	(*FollowInfoResponse)(nil),       // 7: follow.v1.FollowInfoResponse
+	(*FollowRequest)(nil),            // 8: follow.v1.FollowRequest
+	(*FollowResponse)(nil),           // 9: follow.v1.FollowResponse
+	(*CancelFollowRequest)(nil),      // 10: follow.v1.CancelFollowRequest
+	(*CancelFollowResponse)(nil),     // 11: follow.v1.CancelFollowResponse
+	(*GetFollowerRequest)(nil),       // 12: follow.v1.GetFollowerRequest
+	(*GetFollowerResponse)(nil),      // 13: follow.v1.GetFollowerResponse
 }
 var file_follow_v1_follow_proto_depIdxs = []int32{
-	1,  // 0: follow.v1.GetFollowStaticResponse.followStatic:type_name -> follow.v1.FollowStatic
+	1,  // 0: follow.v1.GetFollowStaticsResponse.followStatics:type_name -> follow.v1.FollowStatics
 	0,  // 1: follow.v1.GetFolloweeResponse.follow_relations:type_name -> follow.v1.FollowRelation
 	0,  // 2: follow.v1.FollowInfoResponse.follow_relation:type_name -> follow.v1.FollowRelation
 	0,  // 3: follow.v1.GetFollowerResponse.follow_relations:type_name -> follow.v1.FollowRelation
@@ -783,13 +801,13 @@ var file_follow_v1_follow_proto_depIdxs = []int32{
 	4,  // 6: follow.v1.FollowService.GetFollowee:input_type -> follow.v1.GetFolloweeRequest
 	12, // 7: follow.v1.FollowService.GetFollower:input_type -> follow.v1.GetFollowerRequest
 	6,  // 8: follow.v1.FollowService.FollowInfo:input_type -> follow.v1.FollowInfoRequest
-	2,  // 9: follow.v1.FollowService.GetFollowStatic:input_type -> follow.v1.GetFollowStaticRequest
+	2,  // 9: follow.v1.FollowService.GetFollowStatics:input_type -> follow.v1.GetFollowStaticsRequest
 	9,  // 10: follow.v1.FollowService.Follow:output_type -> follow.v1.FollowResponse
 	11, // 11: follow.v1.FollowService.CancelFollow:output_type -> follow.v1.CancelFollowResponse
 	5,  // 12: follow.v1.FollowService.GetFollowee:output_type -> follow.v1.GetFolloweeResponse
 	13, // 13: follow.v1.FollowService.GetFollower:output_type -> follow.v1.GetFollowerResponse
 	7,  // 14: follow.v1.FollowService.FollowInfo:output_type -> follow.v1.FollowInfoResponse
-	3,  // 15: follow.v1.FollowService.GetFollowStatic:output_type -> follow.v1.GetFollowStaticResponse
+	3,  // 15: follow.v1.FollowService.GetFollowStatics:output_type -> follow.v1.GetFollowStaticsResponse
 	10, // [10:16] is the sub-list for method output_type
 	4,  // [4:10] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name

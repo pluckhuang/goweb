@@ -58,7 +58,7 @@ func (d *CachedRelationRepository) InactiveFollowRelation(ctx context.Context, f
 }
 
 func (d *CachedRelationRepository) GetFollowee(ctx context.Context, follower, offset, limit int64) ([]domain.FollowRelation, error) {
-	followerList, err := d.dao.FollowRelationList(ctx, follower, offset, limit)
+	followerList, err := d.dao.FollowerRelationList(ctx, follower, offset, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (d *CachedRelationRepository) GetFollowee(ctx context.Context, follower, of
 }
 func (d *CachedRelationRepository) GetFollower(ctx context.Context, followee, offset, limit int64) ([]domain.FollowRelation, error) {
 	// 获得个人的粉丝列表
-	followeeList, err := d.dao.FollowRelationList(ctx, followee, offset, limit)
+	followeeList, err := d.dao.FolloweeRelationList(ctx, followee, offset, limit)
 	if err != nil {
 		return nil, err
 	}
