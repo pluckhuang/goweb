@@ -31,6 +31,7 @@ func Init() *App {
 	wire.Build(
 		thirdProvider,
 		serviceProviderSet,
+		events.producer
 		ioc.InitGRPCxServer,
 		wire.Struct(new(App), "*"),
 	)

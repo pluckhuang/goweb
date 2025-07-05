@@ -12,6 +12,11 @@ type Article struct {
 	Utime   time.Time
 }
 
+type Author struct {
+	Id   int64
+	Name string
+}
+
 func (a Article) Abstract() string {
 	str := []rune(a.Content)
 	// 只取部分作为摘要
@@ -29,7 +34,7 @@ func (s ArticleStatus) ToUint8() uint8 {
 
 const (
 	// ArticleStatusUnknown 这是一个未知状态
-	ArticleStatusUnknown = iota
+	ArticleStatusUnknown ArticleStatus = iota
 	// ArticleStatusUnpublished 未发表
 	ArticleStatusUnpublished
 	// ArticleStatusPublished 已发表
@@ -37,8 +42,3 @@ const (
 	// ArticleStatusPrivate 仅自己可见
 	ArticleStatusPrivate
 )
-
-type Author struct {
-	Id   int64
-	Name string
-}
