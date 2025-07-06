@@ -5,8 +5,19 @@ import (
 	"testing"
 
 	articlev1 "github.com/pluckhuang/goweb/aweb/api/proto/gen/article/v1"
+	"github.com/pluckhuang/goweb/aweb/article/ioc"
 	"google.golang.org/grpc"
 )
+
+// cleanupBenchDatabase 清理基准测试数据库
+func cleanupBenchDatabase() {
+	db := ioc.InitDBV2()
+	tables := []string{"articles", "published_articles"}
+
+	for _, table := range tables {
+		db.Exec("TRUNCATE TABLE " + table)
+	}
+}
 
 func newArticleClient1(t testing.TB) articlev1.ArticleServiceClient {
 	conn, err := grpc.Dial("localhost:8076", grpc.WithInsecure())
@@ -30,6 +41,8 @@ func newArticleClient1(t testing.TB) articlev1.ArticleServiceClient {
 // 读操作（GetPubById）平均耗时约 1.33ms/次
 
 func BenchmarkArticleService_Save(b *testing.B) {
+	defer cleanupBenchDatabase() // 基准测试结束后清理数据库
+
 	client := newArticleClient1(b)
 	ctx := context.Background()
 	for i := 0; i < b.N; i++ {

@@ -39,6 +39,7 @@ require (
 	golang.org/x/crypto v0.36.0
 	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sync v0.12.0
+	golang.org/x/time v0.8.0
 	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.5
 	gorm.io/driver/mysql v1.5.7

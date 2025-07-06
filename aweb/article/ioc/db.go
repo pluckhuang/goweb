@@ -14,6 +14,20 @@ import (
 	"gorm.io/plugin/prometheus"
 )
 
+func InitDBV2() *gorm.DB {
+	type Config struct {
+		DSN string `yaml:"dsn"`
+	}
+	c := Config{
+		DSN: "root:password@tcp(localhost:13306)/aweb",
+	}
+	db, err := gorm.Open(mysql.Open(c.DSN), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
 func InitDB(l logger.LoggerV1) *gorm.DB {
 	type Config struct {
 		DSN string `yaml:"dsn"`

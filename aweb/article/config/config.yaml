@@ -5,6 +5,10 @@ grpc:
   server:
     port: "8076"
     etcdTTL: 60
+  client:
+    article:
+      target: “etcd:///service/ArticleService”
+
 etcd:
   endpoints:
     - "localhost:12379"
