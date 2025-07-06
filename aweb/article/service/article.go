@@ -66,7 +66,7 @@ func (a *articleService) GetPubById(ctx context.Context, id, uid int64) (domain.
 	go func() {
 		if err == nil {
 			// 在这里发一个消息
-			er := a.producer.ProduceReadEvent(event.ReadEvent{
+			er := a.producer.ProduceReadEvent(events.ReadEvent{
 				Aid: id,
 				Uid: uid,
 			})

@@ -108,7 +108,7 @@ func (a *ArticleGORMDAO) SyncStatus(ctx context.Context, uid int64, id int64, st
 	now := time.Now().UnixMilli()
 	return a.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		res := tx.Model(&Article{}).
-			Where("id = ? and author_id = ?", uid, id).
+			Where("id = ? and author_id = ?", id, uid).
 			Updates(map[string]any{
 				"utime":  now,
 				"status": status,
@@ -120,7 +120,7 @@ func (a *ArticleGORMDAO) SyncStatus(ctx context.Context, uid int64, id int64, st
 			return errors.New("ID 不对或者创作者不对")
 		}
 		return tx.Model(&PublishedArticle{}).
-			Where("id = ?", uid).
+			Where("id = ?", id).
 			Updates(map[string]any{
 				"utime":  now,
 				"status": status,

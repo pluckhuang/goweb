@@ -8,3 +8,10 @@ grpc:
 etcd:
   endpoints:
     - "localhost:12379"
+
+redis:
+  addr: "localhost:6379"
+
+kafka:
+  addrs:
+    - "localhost:9094"

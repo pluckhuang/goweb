@@ -3,7 +3,6 @@ package ioc
 import (
 	"github.com/IBM/sarama"
 	"github.com/pluckhuang/goweb/aweb/article/events"
-	"github.com/pluckhuang/goweb/aweb/pkg/saramax"
 	"github.com/spf13/viper"
 )
 

@@ -162,6 +162,8 @@ func (c *CachedArticleRepository) GetById(ctx context.Context, id int64) (domain
 	}
 	res = c.ToDomain(art)
 	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
 		er := c.cache.Set(ctx, res)
 		if er != nil {
 			c.l.Error("failed to set article cache", logger.Error(er))
