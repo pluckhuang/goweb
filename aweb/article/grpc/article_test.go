@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func newArticleClient(t *testing.T) articlev1.ArticleServiceClient {
+func newArticleClient(t testing.TB) articlev1.ArticleServiceClient {
 	conn, err := grpc.Dial("localhost:8076", grpc.WithInsecure())
 	if err != nil {
 		t.Fatalf("failed to connect: %v", err)
