@@ -6,7 +6,7 @@ import (
 	"github.com/IBM/sarama"
 )
 
-const TopicReadEvent = "article_read"
+const TopicReadEvent = "article_read_event"
 
 type Producer interface {
 	ProduceReadEvent(evt ReadEvent) error
