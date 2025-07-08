@@ -3,7 +3,7 @@ db:
 
 grpc:
   server:
-    port: "8079"
+    port: "8075"
     etcdTTL: 60
 
 etcd:
@@ -16,3 +16,7 @@ redis:
 kafka:
   addrs:
     - "localhost:9094"
+
+es:
+  urls: "https://localhost:9200"
+  sniff: false

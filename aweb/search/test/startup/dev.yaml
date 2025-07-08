@@ -1,0 +1,16 @@
+db:
+  dsn: "root:password@tcp(localhost:13316)/aweb"
+
+redis:
+  addr: "localhost:6379"
+
+kafka:
+  addrs:
+    - "localhost:9094"
+
+grpc:
+  addr: ":8075"
+
+es:
+  url: http://127.0.0.1:9200
+  sniff: false

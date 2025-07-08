@@ -3,7 +3,7 @@ db:
 
 grpc:
   server:
-    port: "8076"
+    port: "8077"
     etcdTTL: 60
 etcd:
   endpoints:

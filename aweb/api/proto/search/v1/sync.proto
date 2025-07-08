@@ -1,0 +1,35 @@
+
+syntax="proto3";
+
+package search.v1;
+option go_package="search/v1;searchv1";
+
+
+service SyncService {
+  rpc InputArticle (InputArticleRequest) returns (InputArticleResponse);
+  rpc InputAny(InputAnyRequest) returns(InputAnyResponse);
+}
+
+message InputAnyRequest {
+  string index_name = 1;
+  string doc_id = 2;
+  string data = 3;
+}
+
+message InputAnyResponse {
+
+}
+
+message InputArticleRequest {
+  Article article = 1;
+}
+
+message InputArticleResponse {
+}
+
+message Article {
+  int64 id = 1;
+  string title = 2;
+  string content = 3;
+  int32 status = 4;
+}
