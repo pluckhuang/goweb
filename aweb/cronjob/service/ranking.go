@@ -7,8 +7,11 @@ import (
 
 	"github.com/ecodeclub/ekit/queue"
 	"github.com/ecodeclub/ekit/slice"
-	"github.com/pluckhuang/goweb/aweb/internal/domain"
-	"github.com/pluckhuang/goweb/aweb/internal/repository"
+	articlev1 "github.com/pluckhuang/goweb/aweb/api/proto/gen/article/v1"
+	interactivev1 "github.com/pluckhuang/goweb/aweb/api/proto/gen/interactive/v1"
+	"github.com/pluckhuang/goweb/aweb/article/domain"
+	"github.com/pluckhuang/goweb/aweb/cronjob/repository"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type RankingService interface {
@@ -19,10 +22,10 @@ type RankingService interface {
 
 type BatchRankingService struct {
 	// 用来取点赞数
-	intrSvc InteractiveService
+	interactiveSvc interactivev1.InteractiveServiceClient
 
 	// 用来查找文章
-	artSvc ArticleService
+	artSvc articlev1.ArticleServiceClient
 
 	batchSize int
 	scoreFunc func(likeCnt int64, utime time.Time) float64
@@ -31,12 +34,14 @@ type BatchRankingService struct {
 	repo repository.RankingRepository
 }
 
-func NewBatchRankingService(intrSvc InteractiveService, artSvc ArticleService) RankingService {
+func NewBatchRankingService(interactiveSvc interactivev1.InteractiveServiceClient,
+	artSvc articlev1.ArticleServiceClient, repo repository.RankingRepository) RankingService {
 	return &BatchRankingService{
-		intrSvc:   intrSvc,
-		artSvc:    artSvc,
-		batchSize: 100,
-		n:         100,
+		interactiveSvc: interactiveSvc,
+		artSvc:         artSvc,
+		batchSize:      100,
+		n:              100,
+		repo:           repo,
 		scoreFunc: func(likeCnt int64, utime time.Time) float64 {
 			// 时间
 			duration := time.Since(utime).Seconds()
@@ -54,8 +59,7 @@ func (b *BatchRankingService) TopN(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// 最终是要放到缓存里面的
-	// 存到缓存里面
+	// 存到缓存里
 	return b.repo.ReplaceTopN(ctx, arts)
 }
 
@@ -81,31 +85,40 @@ func (b *BatchRankingService) topN(ctx context.Context) ([]domain.Article, error
 
 	for {
 		// 取数据
-		arts, err := b.artSvc.ListPub(ctx, start, offset, b.batchSize)
+		artsResp, err := b.artSvc.ListPub(ctx, &articlev1.ListPubRequest{
+			Start:  timestamppb.New(start),
+			Offset: int32(offset),
+			Limit:  int32(b.batchSize),
+		})
 		if err != nil {
 			return nil, err
 		}
-		//if len(arts) == 0 {
-		//	break
-		//}
-		ids := slice.Map(arts, func(idx int, art domain.Article) int64 {
+		arts := artsResp.Articles
+		ids := slice.Map(arts, func(idx int, art *articlev1.Article) int64 {
 			return art.Id
 		})
-		// 取点赞数
-		intrMap, err := b.intrSvc.GetByIds(ctx, "article", ids)
+		interactiveResp, err := b.interactiveSvc.GetByIds(ctx, &interactivev1.GetByIdsRequest{
+			Biz: "article", Ids: ids,
+		})
 		if err != nil {
 			return nil, err
 		}
+		interactiveMap := interactiveResp.Intrs
 		for _, art := range arts {
-			intr := intrMap[art.Id]
-			//intr, ok := intrMap[art.Id]
-			//if !ok {
-			//	continue
-			//}
-			score := b.scoreFunc(intr.LikeCnt, art.Utime)
+			intr := interactiveMap[art.Id]
+			score := b.scoreFunc(intr.LikeCnt, art.Utime.AsTime())
 			ele := Score{
 				score: score,
-				art:   art,
+				art: domain.Article{
+					Id:      art.Id,
+					Title:   art.Title,
+					Content: art.Content,
+					Author: domain.Author{
+						Id: art.AuthorId,
+					},
+					Utime: art.Utime.AsTime(),
+					Ctime: art.Ctime.AsTime(),
+				},
 			}
 			err = topN.Enqueue(ele)
 			if err == queue.ErrOutOfCapacity {
@@ -124,7 +137,7 @@ func (b *BatchRankingService) topN(ctx context.Context) ([]domain.Article, error
 		// 没有下一批了
 		if len(arts) < b.batchSize ||
 			// 这个是一个优化
-			arts[len(arts)-1].Utime.Before(ddl) {
+			arts[len(arts)-1].Utime.AsTime().Before(ddl) {
 			break
 		}
 	}

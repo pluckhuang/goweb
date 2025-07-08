@@ -39,12 +39,10 @@ import (
 // }
 
 func InitWebServer(mdls []gin.HandlerFunc,
-	userHdl *web.UserHandler,
-	artHdl *web.ArticleHandler) *gin.Engine {
+	userHdl *web.UserHandler) *gin.Engine {
 	server := gin.Default()
 	server.Use(mdls...)
 	userHdl.RegisterRoutes(server)
-	artHdl.RegisterRoutes(server)
 	return server
 }
 
@@ -92,8 +90,5 @@ func InitGinMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler, l logger.Lo
 			l.Debug("", logger.Field{Key: "req", Val: al})
 		}).AllowReqBody().AllowRespBody().Build(),
 		middleware.NewLoginJWTMiddlewareBuilder(hdl).CheckLogin(),
-		func(ctx *gin.Context) {
-			println("这是我的 Middleware2")
-		},
 	}
 }

@@ -32,7 +32,3 @@ func InitSyncProducer(c sarama.Client) sarama.SyncProducer {
 	}
 	return p
 }
-
-func InitConsumers(c1 *article.InteractiveReadEventConsumer) []events.Consumer {
-	return []events.Consumer{c1}
-}

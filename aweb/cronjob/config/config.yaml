@@ -3,8 +3,13 @@ db:
 
 grpc:
   server:
-    port: "8077"
+    port: "8078"
     etcdTTL: 60
+  client:
+    article:
+      target: "etcd:///service/ArticleService"
+    interactive:
+      target: "etcd:///service/InteractiveService"
 
 etcd:
   endpoints:

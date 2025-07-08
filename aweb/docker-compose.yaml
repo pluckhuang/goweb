@@ -5,10 +5,10 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: password
-    volumes:
-      - ./script/mysql/:/docker-entrypoint-initdb.d/
     ports:
       - 13306:3306
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   redis:
     image: "bitnami/redis:latest"
@@ -64,5 +64,21 @@ services:
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
     ports:
-#      所以你要用 12379 端口来连接 etcd
+    # 用 12379 端口来连接 etcd
       - 12379:2379
+    volumes:
+      - etcd_data:/etcd-data
+    restart: unless-stopped
+
+  # etcd UI 管理界面
+  etcd-keeper:
+    image: evildecay/etcdkeeper:latest
+    container_name: aweb-etcd-keeper
+    ports:
+      - "28080:8080"
+    depends_on:
+      - etcd
+    restart: unless-stopped
+volumes:
+  mysql_data:
+  etcd_data:
