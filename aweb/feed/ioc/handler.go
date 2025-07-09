@@ -6,8 +6,8 @@ import (
 	"github.com/pluckhuang/goweb/aweb/feed/service"
 )
 
-func RegisterHandler(repo repository.FeedEventRepo, followClient followv1.FollowServiceClient) map[string]service.Handler {
-	articleHandler := service.NewArticleEventHandler(repo, followClient)
+func RegisterHandler(repo repository.FeedEventRepo, followClient followv1.FollowServiceClient, cfg *service.ArticleEventConfig) map[string]service.Handler {
+	articleHandler := service.NewArticleEventHandler(repo, followClient, cfg)
 	followHandler := service.NewFollowEventHandler(repo)
 	likeHandler := service.NewLikeEventHandler(repo)
 	return map[string]service.Handler{

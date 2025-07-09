@@ -16,3 +16,7 @@ type Handler interface {
 	CreateFeedEvent(ctx context.Context, ext domain.ExtendFields) error
 	FindFeedEvents(ctx context.Context, uid, timestamp, limit int64) ([]domain.FeedEvent, error)
 }
+
+type ArticleEventConfig struct {
+	Threshold int64
+}

@@ -26,7 +26,8 @@ func Init() *App {
 	feedPushEventDAO := dao.NewFeedPushEventDAO(db)
 	feedEventRepo := repository.NewFeedEventRepo(feedPullEventDAO, feedPushEventDAO)
 	followServiceClient := ioc.InitFollowClient()
-	v := ioc.RegisterHandler(feedEventRepo, followServiceClient)
+	articleEventConfig := ioc.InitGlobalVal()
+	v := ioc.RegisterHandler(feedEventRepo, followServiceClient, articleEventConfig)
 	feedService := service.NewFeedService(feedEventRepo, v)
 	feedEventGrpcSvc := grpc.NewFeedEventGrpcSvc(feedService)
 	server := ioc.InitGRPCxServer(loggerV1, client, feedEventGrpcSvc)
@@ -44,4 +45,4 @@ func Init() *App {
 
 var serviceProviderSet = wire.NewSet(dao.NewFeedPushEventDAO, dao.NewFeedPullEventDAO, repository.NewFeedEventRepo)
 
-var thirdProvider = wire.NewSet(ioc.InitEtcdClient, ioc.InitLogger, ioc.InitRedis, ioc.InitKafka, ioc.InitDB, ioc.InitFollowClient)
+var thirdProvider = wire.NewSet(ioc.InitEtcdClient, ioc.InitLogger, ioc.InitRedis, ioc.InitKafka, ioc.InitDB, ioc.InitFollowClient, ioc.InitGlobalVal)

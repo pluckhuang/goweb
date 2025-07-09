@@ -17,17 +17,18 @@ import (
 type ArticleEventHandler struct {
 	repo         repository.FeedEventRepo
 	followClient followv1.FollowServiceClient
+	threshold    int64 // 大v 的粉丝数量阈值
 }
 
 const (
 	ArticleEventName = "article_event"
-	threshold        = 4
 )
 
-func NewArticleEventHandler(repo repository.FeedEventRepo, client followv1.FollowServiceClient) Handler {
+func NewArticleEventHandler(repo repository.FeedEventRepo, client followv1.FollowServiceClient, cfg *ArticleEventConfig) Handler {
 	return &ArticleEventHandler{
 		repo:         repo,
 		followClient: client,
+		threshold:    cfg.Threshold,
 	}
 }
 
@@ -91,7 +92,7 @@ func (h *ArticleEventHandler) CreateFeedEvent(ctx context.Context, ext domain.Ex
 	}
 
 	// 大v
-	if resp.FollowStatics.Followers > threshold {
+	if resp.FollowStatics.Followers > h.threshold {
 		// 拉模型
 		return h.repo.CreatePullEvent(ctx, domain.FeedEvent{Uid: uid,
 			Type:  ArticleEventName,

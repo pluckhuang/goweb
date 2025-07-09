@@ -17,3 +17,6 @@ etcd:
 kafka:
   addrs:
     - "localhost:9094"
+
+service:
+  threshold: 4

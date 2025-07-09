@@ -25,6 +25,7 @@ var thirdProvider = wire.NewSet(
 	ioc.InitKafka,
 	ioc.InitDB,
 	ioc.InitFollowClient,
+	ioc.InitGlobalVal,
 )
 
 func Init() *App {
