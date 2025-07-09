@@ -29,7 +29,7 @@ func (l *LikeEventHandler) FindFeedEvents(ctx context.Context, uid, timestamp, l
 // CreateFeedEvent 中的 ext 里面至少需要三个 id
 // liked int64: 被点赞的人
 // liker int64：点赞的人
-// bizId int64: 被点赞的东西
+// bizId int64: 被点赞的对象的 ID，比如说文章的 ID，评论的 ID
 // biz: string: 业务类型，比如说 article, comment, video 等等
 func (l *LikeEventHandler) CreateFeedEvent(ctx context.Context, ext domain.ExtendFields) error {
 

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -38,7 +39,7 @@ func (h *ArticleEventHandler) FindFeedEvents(ctx context.Context, uid, timestamp
 	events := make([]domain.FeedEvent, 0, limit*2)
 	eg.Go(func() error {
 		// 查询发件箱
-		resp, err := h.followClient.GetFollowee(ctx, &followv1.GetFolloweeRequest{Follower: uid, Limit: 10000})
+		resp, err := h.followClient.GetFollowee(ctx, &followv1.GetFolloweeRequest{Follower: uid, Limit: 200})
 		if err != nil {
 			return err
 		}
@@ -46,6 +47,7 @@ func (h *ArticleEventHandler) FindFeedEvents(ctx context.Context, uid, timestamp
 			return src.Followee
 		})
 		evts, err := h.repo.FindPullEventsWithTyp(ctx, ArticleEventName, followeeIDs, timestamp, limit)
+		fmt.Println("FindFeedEvents: pull events:", len(evts), "uid:", uid, "timestamp:", timestamp, "limit:", limit)
 		if err != nil {
 			return err
 		}

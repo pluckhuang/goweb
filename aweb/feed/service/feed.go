@@ -61,7 +61,7 @@ func (f *feedService) GetFeedEventList(ctx context.Context, uid int64, timestamp
 	if err != nil {
 		return nil, err
 	}
-	// 你已经查询所有的数据，现在要排序
+	// 查询所有的数据，现在要排序
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].Ctime.UnixMilli() > events[j].Ctime.UnixMilli()
 	})

@@ -2,18 +2,19 @@ db:
   dsn: "root:password@tcp(localhost:13306)/aweb"
 grpc:
   server:
-    addr: "8081"
+    port: 8074
     etcdTTL: 60
   client:
-    follow:
-      target: "etcd:///service/FollowService"
-
+    feed:
+      target: "etcd:///service/feed"
 redis:
   addr: "localhost:6379"
-
-etcd:
-  endpoints:
-    - "localhost:12379"
 kafka:
   addrs:
     - "localhost:9094"
+etcd:
+  endpoints:
+    - "localhost:12379"
+
+service:
+  threshold: 4

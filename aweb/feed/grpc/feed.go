@@ -49,7 +49,6 @@ func (f *FeedEventGrpcSvc) convertToDomain(event *feedv1.FeedEvent) domain.FeedE
 	ext := map[string]string{}
 	_ = json.Unmarshal([]byte(event.Content), &ext)
 	return domain.FeedEvent{
-		ID:    event.Id,
 		Ctime: time.Unix(event.Ctime, 0),
 		Type:  event.GetType(),
 		Ext:   ext,
