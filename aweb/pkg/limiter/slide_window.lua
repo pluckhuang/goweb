@@ -12,7 +12,9 @@ local now = tonumber(ARGV[3])
 -- 窗口的起始时间
 local min = now - window
 
+-- 删除有序集合中所有 score 小于 min 的元素
 redis.call('ZREMRANGEBYSCORE', key, '-inf', min)
+-- 获取当前窗口内的元素数量
 local cnt = redis.call('ZCOUNT', key, '-inf', '+inf')
 -- local cnt = redis.call('ZCOUNT', key, min, '+inf')
 if cnt >= threshold then
