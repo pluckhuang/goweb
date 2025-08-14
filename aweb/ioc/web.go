@@ -46,6 +46,41 @@ func InitWebServer(mdls []gin.HandlerFunc,
 	return server
 }
 
+// 为什么每一个中间件 Build() 返回一个带有 ctx 参数的匿名函数？
+// Gin 的中间件规范要求每个中间件都是如下形式的函数：
+// func(ctx *gin.Context)
+// 也就是说，Gin 在处理每个 HTTP 请求时，会依次调用所有注册的中间件，每个中间件都需要接收当前请求的上下文（ctx），以便：
+
+// 读取请求信息（如 IP、Header、Path 等）
+// 执行中间件逻辑
+// 决定是否继续处理请求（ctx.Abort() 或 ctx.Next()）
+// 返回错误响应或通过请求
+// 因此，Build() 的最终产物必须是一个带有 ctx *gin.Context 参数的函数，这样才能被 Gin 框架识别和调用，完成中间件逻辑。
+// -------------------------
+// ctx 包含了什么
+// 在 Gin 框架中，ctx 指的是 *gin.Context 类型的对象。它是每个 HTTP 请求的上下文，包含了请求处理过程中所需的所有信息和操作方法。具体包括：
+
+// 请求信息
+
+// 请求的 URL、方法、Header、Body、参数等。
+// 客户端 IP、Cookie、Query 参数等。
+// 响应操作
+
+// 设置响应状态码、Header、返回 JSON、字符串、文件等。
+// 终止请求（Abort）、重定向等。
+// 中间件控制
+
+// 控制请求流程（如 Next() 继续下一个中间件，Abort() 停止后续处理）。
+// 在中间件间传递数据（Set/Get）。
+// 上下文扩展
+
+// 可以挂载自定义数据，方便业务逻辑和中间件之间共享信息。
+// 错误处理
+
+// 记录和处理请求中的错误。
+// 总结：
+// ctx 是 Gin 处理每个 HTTP 请求时的核心对象，包含了请求、响应、流程控制和数据共享等所有上下文信息。
+
 func InitGinMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler, l logger.LoggerV1) []gin.HandlerFunc {
 	pb := &prometheus.Builder{
 		Namespace: "pluckh.com",
