@@ -2,14 +2,11 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
-	"github.com/pluckhuang/goweb/aweb/ioc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -19,12 +16,12 @@ import (
 func main() {
 	initViper()
 	initLogger()
-	tpCancel := ioc.InitOTEL()
-	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-		tpCancel(ctx)
-	}()
+	// tpCancel := ioc.InitOTEL()
+	// defer func() {
+	// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// 	defer cancel()
+	// 	tpCancel(ctx)
+	// }()
 	app := InitWebServer()
 	initPrometheus()
 	server := app.server
